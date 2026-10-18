@@ -78,6 +78,7 @@ add_library(sunshine_engine STATIC
     engine/src/swapchain_context.cpp
     engine/src/command_context.cpp
     engine/src/shader_watcher.cpp
+    engine/src/model.cpp
     engine/src/internal_types.hpp
 )
 
@@ -93,6 +94,7 @@ target_link_libraries(sunshine_engine
     PRIVATE
         sunshine_backend_vulkan
         stb
+        tinygltf
     PUBLIC
         glfw
         glm::glm
@@ -194,6 +196,26 @@ target_link_libraries(04_benchmark
 
 set_target_properties(04_benchmark PROPERTIES
     OUTPUT_NAME "04_benchmark"
+    FOLDER "Examples"
+)
+
+# Example 05: glTF 2.0 PBR Model (Phase 6)
+add_executable(05_gltf_model
+    examples/05_gltf_model/main.cpp
+)
+
+target_include_directories(05_gltf_model
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/05_gltf_model
+)
+
+target_link_libraries(05_gltf_model
+    PRIVATE
+        sunshine_engine
+)
+
+set_target_properties(05_gltf_model PROPERTIES
+    OUTPUT_NAME "05_gltf_model"
     FOLDER "Examples"
 )
 

@@ -12,7 +12,7 @@ Sunshine Renderer'ın temel ilkesi değişmez:
 
 | Faz | Başlık | Hedef Çıktı | Durum |
 |:---:|:---|:---|:---:|
-| **Faz 6** | Sahne Yöneticisi & 3D Model Yükleme (glTF 2.0 / OBJ) | `examples/05_gltf_model` | ⬜ Başlanmadı |
+| **Faz 6** | Sahne Yöneticisi & 3D Model Yükleme (glTF 2.0 / OBJ) | `examples/05_gltf_model` | ✅ Tamamlandı |
 | **Faz 7** | İleri Işıklandırma & Gerçek Zamanlı Gölgeler (Shadow Mapping) | `examples/06_shadows` | ⬜ Başlanmadı |
 | **Faz 8** | Render Graph & İleri Post-Processing (Bloom / SSAO) | `examples/07_render_graph_bloom` | ⬜ Başlanmadı |
 | **Faz 9** | Compute Shader & Multi-threaded Command Recording | `examples/08_gpu_particles` | ⬜ Başlanmadı |
@@ -25,15 +25,15 @@ Sunshine Renderer'ın temel ilkesi değişmez:
 ### Faz 6 — Sahne Yöneticisi & 3D Model Yükleme (glTF 2.0 / OBJ)
 **Hedef:** Kod içinde elle köşe dizileri tanımlamak yerine gerçek 3D sanat varlıklarını (asset) sahneye aktarmak.
 
-- [ ] Hafif, framework bağımsız model yükleyici entegrasyonu (`tinygltf` / `fast_obj`).
-- [ ] `Mesh` ve `Submesh` veri yapıları: Çoklu materyale sahip karmaşık 3D modellerin ayrıştırılması.
-- [ ] `SceneNode` ve Sahne Hiyerarşisi: Ebeveyn-çocuk ilişkili (Parent-Child) yerel/dünya dönüşüm matrisleri (`Transform`).
-- [ ] glTF 2.0 PBR Doku Desteği:
+- [x] Hafif, framework bağımsız model yükleyici entegrasyonu (`tinygltf`).
+- [x] `Mesh` ve `Submesh` veri yapıları: Çoklu materyale sahip karmaşık 3D modellerin ayrıştırılması.
+- [x] `SceneNode` ve Sahne Hiyerarşisi: Ebeveyn-çocuk ilişkili (Parent-Child) yerel/dünya dönüşüm matrisleri (`Transform`).
+- [x] glTF 2.0 PBR Doku Desteği:
   - Base Color (Albedo) haritası
   - Normal haritası (Tangent space normal mapping)
   - Metallic-Roughness kompozit haritası
   - Emissive & Ambient Occlusion (AO) haritaları
-- [ ] Faz Sonunda: Sahnede tam dokulu, gerçekçi bir 3D glTF modeli (ör. Helmet / Sci-Fi Drone) serbest kamera ile incelenebilecek.
+- [x] Faz Sonunda: Sahnede tam dokulu, gerçekçi bir 3D glTF modeli (Khronos DamagedHelmet) serbest orbit kamera ile incelenebilecek.
 
 **Çıktı:** `examples/05_gltf_model`
 

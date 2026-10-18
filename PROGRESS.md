@@ -20,6 +20,7 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
 | **Faz 3** | 3D Kamera, Depth Buffer, Doku & 3D Model | ✅ Tamamlandı | `build/Debug/02_textured_model.exe` | 2026-10-07 |
 | **Faz 4** | Kullanılabilirlik & Canlı Shader Hot-Reloading | ✅ Tamamlandı | `build/Debug/03_hot_reload.exe` | 2026-10-14 |
 | **Faz 5** | Performans Doğrulama, PBR & Instancing | ✅ Tamamlandı | `build/Debug/04_benchmark.exe` | 2026-10-18 |
+| **Faz 6** | Sahne Yöneticisi & 3D glTF 2.0 Model Yükleme | ✅ Tamamlandı | `build/Debug/05_gltf_model.exe` | 2026-10-18 |
 
 ---
 
@@ -62,6 +63,14 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
 - **Post-Processing:** ACES Filmic tonemapping, sinematik vignette ve sRGB gamma 2.2 düzeltmesi (klavyeden `Space` ile açılıp kapatılabilir).
 - **Gerçek Zamanlı Profiler:** `Sunshine::Profiler` ile FPS, Frame Time, poligon ve draw call metrikleri pencere başlığında anlık telemetri olarak sunuldu.
 - **Çıktı:** Yüksek kare hızlı PBR stres testi demosu (`04_benchmark`).
+
+### 🔹 Faz 6: Sahne Yöneticisi & 3D glTF 2.0 Model Yükleme
+- **glTF 2.0 Desteği:** `tinygltf` kütüphanesi motor yapısına entegre edildi, hem ASCII `.gltf` hem de ikili paketlenmiş `.glb` dosyaları doğrudan GPU'ya yüklenebilir hale geldi.
+- **Sahne Hiyerarşisi (`SceneNode` & `Transform`):** Ebeveyn-çocuk ilişkili (Parent-Child) dönüşüm matrisleri ($T \times R \times S$) geliştirildi, glTF düğüm ağacı eksiksiz ayrıştırıldı.
+- **PBR Materyalleri & Dokular:** Base Color (Albedo), Normal, Metallic-Roughness (G/B kanalları) ve Occlusion (AO) dokuları otomatik olarak GPU `Texture2D` ve `Sampler` nesnelerine bağlandı. Eksik dokular için 1x1 piksellik fallback dokular üretildi.
+- **Tangent-Space Normal Mapping:** Vertex shader'da $TBN$ matrisi hesaplandı; teğet uzayı normal haritaları fragment shader'da dünya uzayına dönüştürülerek mikro detaylı yüzey çıkıntıları sağlandı. Modelde teğet vektörleri eksik olduğunda otomatik MikkTSpace teğet hesaplama algoritması devreye alındı.
+- **Etkileşimli Kamera & Dinamik Işıklar:** Fare ile orbit dönüşü, zoom kontrolleri ve dönen 4 dinamik renkli ışıkla endüstri standardı Khronos `DamagedHelmet.glb` modeli başarıyla render edildi.
+- **Çıktı:** `build/Debug/05_gltf_model.exe`
 
 ---
 

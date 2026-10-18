@@ -12,4 +12,8 @@
 #include "camera.hpp"
 #include "shader_watcher.hpp"
 #include "profiler.hpp"
+#include "transform.hpp"
+#include "material.hpp"
+#include "scene_node.hpp"
+#include "model.hpp"
 #include "rhi/rhi_types.hpp"

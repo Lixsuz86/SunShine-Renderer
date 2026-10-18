@@ -64,3 +64,19 @@ if(NOT TARGET stb)
     add_library(stb INTERFACE)
     target_include_directories(stb INTERFACE ${stb_SOURCE_DIR})
 endif()
+
+# 6. tinygltf (glTF 2.0 loader)
+message(STATUS "Fetching tinygltf...")
+set(TINYGLTF_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(
+    tinygltf
+    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+    GIT_TAG        v2.9.3
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(tinygltf)
+
+if(NOT TARGET tinygltf)
+    add_library(tinygltf INTERFACE)
+    target_include_directories(tinygltf INTERFACE ${tinygltf_SOURCE_DIR})
+endif()
