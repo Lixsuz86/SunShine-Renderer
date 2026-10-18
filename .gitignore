@@ -1,0 +1,28 @@
+# Build directories
+build/
+bin/
+out/
+x64/
+Debug/
+Release/
+
+# Visual Studio & IDE files
+.vs/
+*.sln
+*.vcxproj*
+*.user
+*.suo
+.vscode/
+.idea/
+
+# CMake temporary files
+CMakeLists.txt.user
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# Temporary & intermediate artifacts
+*.log
+*.tmp
+*.spv
+!examples/*/shaders/*.spv.hpp
