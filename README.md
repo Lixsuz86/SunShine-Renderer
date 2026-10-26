@@ -85,8 +85,8 @@ Sunshine renderer/
 
 ```bash
 # Clone the repository
-git clone https://github.com/Lixsuz86/sunshine-renderer.git
-cd sunshine-renderer
+git clone https://github.com/Lixsuz86/SunShine-Renderer.git
+cd SunShine-Renderer
 
 # Configure build
 cmake -B build -DCMAKE_BUILD_TYPE=Release
