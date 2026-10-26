@@ -61,11 +61,18 @@ size_t VulkanRHIDevice::HashPipelineDesc(const RHI::PipelineDesc& desc) {
 }
 
 std::shared_ptr<RHI::IRHIPipeline> VulkanRHIDevice::CreatePipeline(const RHI::PipelineDesc& desc) {
-    if (m_compatibleRenderPass == VK_NULL_HANDLE) {
+    return CreatePipeline(desc, m_compatibleRenderPass);
+}
+
+std::shared_ptr<RHI::IRHIPipeline> VulkanRHIDevice::CreatePipeline(const RHI::PipelineDesc& desc, VkRenderPass compatibleRenderPass) {
+    VkRenderPass rp = (compatibleRenderPass != VK_NULL_HANDLE) ? compatibleRenderPass : m_compatibleRenderPass;
+    if (rp == VK_NULL_HANDLE) {
         throw GraphicsException("Cannot create Vulkan pipeline without a compatible render pass configured on RHI device!");
     }
 
     size_t hash = HashPipelineDesc(desc);
+    hash ^= std::hash<uint64_t>{}(reinterpret_cast<uint64_t>(rp)) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+
     auto it = m_pipelineCache.find(hash);
     if (it != m_pipelineCache.end()) {
         std::cout << "[Sunshine RHI] Pipeline cache HIT for pipeline: " 
@@ -75,7 +82,7 @@ std::shared_ptr<RHI::IRHIPipeline> VulkanRHIDevice::CreatePipeline(const RHI::Pi
 
     std::cout << "[Sunshine RHI] Creating and caching new pipeline: " 
                   << (desc.debugName.empty() ? "unnamed" : desc.debugName) << std::endl;
-    auto pipeline = std::make_shared<VulkanRHIPipeline>(m_context, m_compatibleRenderPass, desc);
+    auto pipeline = std::make_shared<VulkanRHIPipeline>(m_context, rp, desc);
     m_pipelineCache[hash] = pipeline;
     return pipeline;
 }

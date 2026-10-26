@@ -1,4 +1,5 @@
 #include "sunshine/command_context.hpp"
+#include "sunshine/shadow_map.hpp"
 #include "internal_types.hpp"
 #include "sunshine/error.hpp"
 #include <array>
@@ -58,6 +59,43 @@ void CommandContextImpl::Clear(const Color& color) {
     // Automatically set default dynamic viewport and scissor matching the current extent
     rhiCommandList.SetViewport(0.0f, 0.0f, static_cast<float>(extent.width), static_cast<float>(extent.height));
     rhiCommandList.SetScissor(0, 0, extent.width, extent.height);
+}
+
+void CommandContextImpl::BeginShadowPass(ShadowMapImpl& shadowMap) {
+    if (!isRecording) {
+        throw GraphicsException("Cannot begin shadow pass outside of an active command buffer recording!");
+    }
+
+    if (passActive) {
+        vkCmdEndRenderPass(commandBuffer);
+        passActive = false;
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = shadowMap.renderPass;
+    renderPassInfo.framebuffer = shadowMap.framebuffer;
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = {shadowMap.width, shadowMap.height};
+
+    VkClearValue clearValue{};
+    clearValue.depthStencil = { 1.0f, 0 };
+
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearValue;
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    passActive = true;
+
+    rhiCommandList.SetViewport(0.0f, 0.0f, static_cast<float>(shadowMap.width), static_cast<float>(shadowMap.height));
+    rhiCommandList.SetScissor(0, 0, shadowMap.width, shadowMap.height);
+}
+
+void CommandContextImpl::EndShadowPass() {
+    if (passActive) {
+        vkCmdEndRenderPass(commandBuffer);
+        passActive = false;
+    }
 }
 
 void CommandContextImpl::EnsurePassActive() {
@@ -197,6 +235,18 @@ CommandContext& CommandContext::operator=(CommandContext&& other) noexcept {
 void CommandContext::Clear(const Color& color) {
     if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
     m_impl->Clear(color);
+}
+
+void CommandContext::BeginShadowPass(ShadowMap& shadowMap) {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    auto* smImpl = shadowMap.GetImpl();
+    if (!smImpl) throw GraphicsException("Invalid ShadowMap passed to BeginShadowPass!");
+    m_impl->BeginShadowPass(*smImpl);
+}
+
+void CommandContext::EndShadowPass() {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    m_impl->EndShadowPass();
 }
 
 void CommandContext::SetPipeline(const Pipeline& pipeline) {

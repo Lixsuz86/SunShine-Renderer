@@ -1,4 +1,5 @@
 #include "sunshine/device.hpp"
+#include "sunshine/shadow_map.hpp"
 #include "sunshine/error.hpp"
 #include "internal_types.hpp"
 
@@ -178,6 +179,15 @@ std::shared_ptr<RHI::IRHIShader> Device::CreateShader(const RHI::ShaderDesc& des
 
 Pipeline Device::CreatePipeline(const RHI::PipelineDesc& desc) {
     auto rhiPipe = m_impl->rhiDevice->CreatePipeline(desc);
+    return Pipeline(rhiPipe);
+}
+
+Pipeline Device::CreatePipeline(const RHI::PipelineDesc& desc, const ShadowMap& shadowMap) {
+    auto* smImpl = shadowMap.GetImpl();
+    if (!smImpl) {
+        throw GraphicsException("Cannot create shadow pipeline with invalid ShadowMap!");
+    }
+    auto rhiPipe = m_impl->rhiDevice->CreatePipeline(desc, smImpl->renderPass);
     return Pipeline(rhiPipe);
 }
 

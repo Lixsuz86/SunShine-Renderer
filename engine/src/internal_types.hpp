@@ -31,6 +31,8 @@ struct CommandContextImpl {
 
     void Begin(VkCommandBuffer cmd, VkRenderPass rp, VkFramebuffer fb, VkExtent2D ext, uint32_t frameIndex);
     void Clear(const Color& color);
+    void BeginShadowPass(struct ShadowMapImpl& shadowMap);
+    void EndShadowPass();
     void EnsurePassActive();
     void SetPipeline(const Pipeline& pipeline);
     void SetVertexBuffer(uint32_t binding, const VertexBuffer& vertexBuffer, uint64_t offset);
@@ -44,6 +46,23 @@ struct CommandContextImpl {
     void Draw(const Pipeline& pipeline, const VertexBuffer& vertexBuffer, uint32_t vertexCount);
     void DrawIndexed(const Pipeline& pipeline, const VertexBuffer& vertexBuffer, const IndexBuffer& indexBuffer, uint32_t indexCount);
     void End();
+};
+
+struct ShadowMapImpl {
+    Vulkan::VulkanContext& context;
+    Vulkan::VulkanRHIDevice& rhiDevice;
+    uint32_t width{2048};
+    uint32_t height{2048};
+    VkRenderPass renderPass{VK_NULL_HANDLE};
+    VkFramebuffer framebuffer{VK_NULL_HANDLE};
+    std::shared_ptr<RHI::IRHITexture> rhiTexture;
+    std::shared_ptr<RHI::IRHISampler> rhiSampler;
+
+    ShadowMapImpl(Vulkan::VulkanContext& ctx, Vulkan::VulkanRHIDevice& rhiDev, uint32_t w, uint32_t h);
+    ~ShadowMapImpl();
+
+    void CreateRenderPass();
+    void CreateFramebuffer();
 };
 
 struct SwapchainContextImpl {

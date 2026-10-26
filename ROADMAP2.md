@@ -42,13 +42,13 @@ Sunshine Renderer'ın temel ilkesi değişmez:
 ### Faz 7 — İleri Işıklandırma & Gerçek Zamanlı Gölgeler (Shadow Mapping)
 **Hedef:** Sahneye derinlik ve gerçekçilik katan dinamik gölge sistemleri.
 
-- [ ] Sadece derinlik yazan (Depth-Only) Render Pass & Shadow Map Pipeline'ı.
-- [ ] Yönlü Işık (Directional Light) için Cascaded Shadow Maps (CSM):
-  - Kameranın görüş piramidini (view frustum) dilimlere ayırma.
-  - Yakın ve uzak mesafelerde yüksek çözünürlüklü gölge filtreleme.
-- [ ] Noktasal Işık (Point Light) için Omnidirectional Cubemap Gölgeleri.
-- [ ] PCF (Percentage Closer Filtering) ile donanım destekli yumuşak gölge kenarları (Soft Shadows).
-- [ ] Faz Sonunda: Dönen ışık kaynaklarına göre zemine ve nesnelerin üzerine dinamik gölge düşüren sahne.
+- [x] Sadece derinlik yazan (Depth-Only) Render Pass & Shadow Map Pipeline'ı (`Sunshine::ShadowMap`).
+- [x] Yönlü Işık (Directional Light) için Light Space Matrix dönüşümü ve gölge projeksiyonu.
+- [x] Donanım derinlik kaydırması (Depth Bias - Constant & Slope factor) ile shadow acne engelleme.
+- [x] PCF (Percentage Closer Filtering) 3x3 örnekleme ile yumuşak kenarlı gölgeler (Soft Shadows).
+- [x] Cook-Torrance PBR gölge fragment shader'ı (`pbr_shadow.frag` & `pbr_shadow.vert`).
+- [x] Temiz iki geçişli API mimarisi: `cmd.BeginShadowPass(shadowMap)` ve `cmd.EndShadowPass()`.
+- [x] Faz Sonunda: Dönen güneş ışığı altında zemine ve glTF kask modeline dinamik yumuşak gölgeler düşüren orbit kameralı demo.
 
 **Çıktı:** `examples/06_shadows`
 

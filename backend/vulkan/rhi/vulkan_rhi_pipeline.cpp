@@ -169,7 +169,10 @@ VulkanRHIPipeline::VulkanRHIPipeline(VulkanContext& context, VkRenderPass compat
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = ConvertCullMode(desc.rasterizer.cullMode);
     rasterizer.frontFace = ConvertFrontFace(desc.rasterizer.frontFace);
-    rasterizer.depthBiasEnable = VK_FALSE;
+    rasterizer.depthBiasEnable = desc.rasterizer.depthBiasEnable ? VK_TRUE : VK_FALSE;
+    rasterizer.depthBiasConstantFactor = desc.rasterizer.depthBiasConstantFactor;
+    rasterizer.depthBiasClamp = desc.rasterizer.depthBiasClamp;
+    rasterizer.depthBiasSlopeFactor = desc.rasterizer.depthBiasSlopeFactor;
 
     // 7. Multisampling
     VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -195,8 +198,13 @@ VulkanRHIPipeline::VulkanRHIPipeline(VulkanContext& context, VkRenderPass compat
     VkPipelineColorBlendStateCreateInfo colorBlending{};
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     colorBlending.logicOpEnable = VK_FALSE;
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
+    if (desc.colorAttachmentCount == 0) {
+        colorBlending.attachmentCount = 0;
+        colorBlending.pAttachments = nullptr;
+    } else {
+        colorBlending.attachmentCount = 1;
+        colorBlending.pAttachments = &colorBlendAttachment;
+    }
 
     // 10. Descriptor Set Layout & Pool
     constexpr uint32_t MAX_SETS = 2; // Support double-buffering

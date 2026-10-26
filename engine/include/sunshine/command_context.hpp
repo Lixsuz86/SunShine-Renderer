@@ -9,6 +9,7 @@ namespace Sunshine {
 
 class Device;
 class FrameContext;
+class ShadowMap;
 
 namespace Internal {
     struct CommandContextImpl;
@@ -23,6 +24,9 @@ public:
     CommandContext& operator=(CommandContext&&) noexcept;
 
     void Clear(const Color& color);
+
+    void BeginShadowPass(ShadowMap& shadowMap);
+    void EndShadowPass();
 
     void SetPipeline(const Pipeline& pipeline);
     void SetVertexBuffer(uint32_t binding, const VertexBuffer& vertexBuffer, uint64_t offset = 0);

@@ -16,6 +16,7 @@ struct PipelineDesc {
     BlendDesc blend{};
     DepthStencilDesc depthStencil{};
     std::vector<DescriptorBindingDesc> descriptorBindings;
+    uint32_t colorAttachmentCount{1};
     std::string debugName;
 };
 

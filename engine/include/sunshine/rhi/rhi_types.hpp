@@ -128,6 +128,10 @@ struct RasterizerDesc {
     CullMode cullMode{CullMode::Back};
     FrontFace frontFace{FrontFace::CounterClockwise};
     PolygonMode polygonMode{PolygonMode::Fill};
+    bool depthBiasEnable{false};
+    float depthBiasConstantFactor{0.0f};
+    float depthBiasClamp{0.0f};
+    float depthBiasSlopeFactor{0.0f};
 };
 
 struct BlendDesc {
@@ -177,12 +181,22 @@ enum class AddressMode {
     ClampToBorder
 };
 
+enum class BorderColor {
+    FloatOpaqueBlack,
+    IntOpaqueBlack,
+    FloatOpaqueWhite,
+    IntOpaqueWhite,
+    FloatTransparentBlack,
+    IntTransparentBlack
+};
+
 struct SamplerDesc {
     FilterMode minFilter{FilterMode::Linear};
     FilterMode magFilter{FilterMode::Linear};
     AddressMode addressModeU{AddressMode::Repeat};
     AddressMode addressModeV{AddressMode::Repeat};
     AddressMode addressModeW{AddressMode::Repeat};
+    BorderColor borderColor{BorderColor::FloatOpaqueBlack};
 };
 
 enum class DescriptorType {

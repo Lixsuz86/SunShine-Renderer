@@ -16,4 +16,5 @@
 #include "material.hpp"
 #include "scene_node.hpp"
 #include "model.hpp"
+#include "shadow_map.hpp"
 #include "rhi/rhi_types.hpp"

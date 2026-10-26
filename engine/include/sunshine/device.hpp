@@ -27,6 +27,8 @@ namespace Internal {
     struct DeviceImpl;
 }
 
+class ShadowMap;
+
 /**
  * @brief Core Sunshine graphics device representing the physical/logical GPU.
  * 
@@ -143,12 +145,18 @@ public:
     Pipeline CreatePipeline(const RHI::PipelineDesc& desc);
 
     /**
+     * @brief Creates and caches a graphics pipeline compatible with the specified ShadowMap's depth pass.
+     */
+    Pipeline CreatePipeline(const RHI::PipelineDesc& desc, const ShadowMap& shadowMap);
+
+    /**
      * @brief Returns the underlying low-level RHI device interface.
      */
     RHI::IRHIDevice& GetRHIDevice() noexcept;
 
 private:
     friend class SwapchainContext;
+    friend class ShadowMap;
     Internal::DeviceImpl* GetImpl() const noexcept { return m_impl.get(); }
 
     std::unique_ptr<Internal::DeviceImpl> m_impl;

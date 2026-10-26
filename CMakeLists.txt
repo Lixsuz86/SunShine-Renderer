@@ -79,6 +79,7 @@ add_library(sunshine_engine STATIC
     engine/src/command_context.cpp
     engine/src/shader_watcher.cpp
     engine/src/model.cpp
+    engine/src/shadow_map.cpp
     engine/src/internal_types.hpp
 )
 
@@ -218,4 +219,25 @@ set_target_properties(05_gltf_model PROPERTIES
     OUTPUT_NAME "05_gltf_model"
     FOLDER "Examples"
 )
+
+# Example 06: Real-Time Soft Shadows (Phase 7)
+add_executable(06_shadows
+    examples/06_shadows/main.cpp
+)
+
+target_include_directories(06_shadows
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/06_shadows
+)
+
+target_link_libraries(06_shadows
+    PRIVATE
+        sunshine_engine
+)
+
+set_target_properties(06_shadows PROPERTIES
+    OUTPUT_NAME "06_shadows"
+    FOLDER "Examples"
+)
+
 

@@ -70,7 +70,17 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
 - **PBR Materyalleri & Dokular:** Base Color (Albedo), Normal, Metallic-Roughness (G/B kanalları) ve Occlusion (AO) dokuları otomatik olarak GPU `Texture2D` ve `Sampler` nesnelerine bağlandı. Eksik dokular için 1x1 piksellik fallback dokular üretildi.
 - **Tangent-Space Normal Mapping:** Vertex shader'da $TBN$ matrisi hesaplandı; teğet uzayı normal haritaları fragment shader'da dünya uzayına dönüştürülerek mikro detaylı yüzey çıkıntıları sağlandı. Modelde teğet vektörleri eksik olduğunda otomatik MikkTSpace teğet hesaplama algoritması devreye alındı.
 - **Etkileşimli Kamera & Dinamik Işıklar:** Fare ile orbit dönüşü, zoom kontrolleri ve dönen 4 dinamik renkli ışıkla endüstri standardı Khronos `DamagedHelmet.glb` modeli başarıyla render edildi.
-- **Çıktı:** `build/Debug/05_gltf_model.exe`
+- **Çıktı:** `build/Release/05_gltf_model.exe`
+
+### 🔹 Faz 7: İleri Işıklandırma & Gerçek Zamanlı Gölgeler (Shadow Mapping)
+- **Derinlik Odaklı Render Pass (`Sunshine::ShadowMap`):** Yüksek çözünürlüklü (2048x2048 `VK_FORMAT_D32_SFLOAT`) derinlik dokusu, özel offscreen render pass ve framebuffer mimarisi geliştirildi.
+- **Vulkan Subpass Otomasyonu:** Render pass sonunda `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL` geçişi ve subpass bağımlılığı (dependency) ile manuel bellek bariyerine gerek kalmadan derinlik tamponunun ana geçişte örneklenmesi garanti altına alındı.
+- **Temiz İki Geçişli (Two-Pass) API:** `cmd.BeginShadowPass(shadowMap)` ve `cmd.EndShadowPass()` metotları ile gölge ve sahne geçişleri motor içinde yalın ve sezgisel hale getirildi.
+- **Uyumlu Pipeline Oluşturma:** `device.CreatePipeline(pipeDesc, shadowMap)` ile sıfır renk eklentili (`colorAttachmentCount = 0`) gölge pipeline'ları ve swapchain pipeline'ları tek çatı altında önbelleklendi.
+- **Donanım Derinlik Kaydırması (Depth Bias):** Rasterizer üzerinde statik constant ve slope depth bias etkinleştirilerek yüzey kendi kendine gölgelenmesindeki yapay bozulmalar (shadow acne / moire) yok edildi.
+- **Yumuşak Gölgeler (PCF 3x3 Filtering):** `pbr_shadow.frag` shader'ında 9 noktalı Percentage Closer Filtering ve eğime duyarlı (slope-scaled) derinlik toleransı ile sinematik yumuşak gölge kenarları (penumbra) elde edildi.
+- **Border Clamping:** Işık hacmi dışındaki koordinatların kararmaması için `VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE` kenarlık rengine sahip gölge sampler'ı eklendi.
+- **Çıktı:** `build/Release/06_shadows.exe` (Dönen güneş ışığı altında zemine ve glTF kask modeline dinamik yumuşak gölgeler düşüren orbit kameralı etkileşimli sahne).
 
 ---
 

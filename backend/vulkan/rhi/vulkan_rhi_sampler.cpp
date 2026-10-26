@@ -21,6 +21,18 @@ VkSamplerAddressMode VulkanRHISampler::ConvertAddressMode(RHI::AddressMode mode)
     }
 }
 
+static VkBorderColor ConvertBorderColor(RHI::BorderColor color) {
+    switch (color) {
+        case RHI::BorderColor::FloatOpaqueBlack:      return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+        case RHI::BorderColor::IntOpaqueBlack:        return VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        case RHI::BorderColor::FloatOpaqueWhite:      return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        case RHI::BorderColor::IntOpaqueWhite:        return VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+        case RHI::BorderColor::FloatTransparentBlack: return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+        case RHI::BorderColor::IntTransparentBlack:   return VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
+        default: return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+    }
+}
+
 VulkanRHISampler::VulkanRHISampler(VulkanContext& context, const RHI::SamplerDesc& desc)
     : m_context(context), m_desc(desc) 
 {
@@ -33,7 +45,7 @@ VulkanRHISampler::VulkanRHISampler(VulkanContext& context, const RHI::SamplerDes
     samplerInfo.addressModeW = ConvertAddressMode(desc.addressModeW);
     samplerInfo.anisotropyEnable = VK_FALSE;
     samplerInfo.maxAnisotropy = 1.0f;
-    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.borderColor = ConvertBorderColor(desc.borderColor);
     samplerInfo.unnormalizedCoordinates = VK_FALSE;
     samplerInfo.compareEnable = VK_FALSE;
     samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;

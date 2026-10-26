@@ -19,6 +19,7 @@ public:
     std::shared_ptr<RHI::IRHIBuffer> CreateBuffer(const RHI::BufferDesc& desc, const void* initialData = nullptr) override;
     std::shared_ptr<RHI::IRHIShader> CreateShader(const RHI::ShaderDesc& desc) override;
     std::shared_ptr<RHI::IRHIPipeline> CreatePipeline(const RHI::PipelineDesc& desc) override;
+    std::shared_ptr<RHI::IRHIPipeline> CreatePipeline(const RHI::PipelineDesc& desc, VkRenderPass compatibleRenderPass);
     std::shared_ptr<RHI::IRHITexture> CreateTexture(const RHI::TextureDesc& desc, const void* initialData = nullptr) override;
     std::shared_ptr<RHI::IRHISampler> CreateSampler(const RHI::SamplerDesc& desc) override;
     void WaitIdle() override;

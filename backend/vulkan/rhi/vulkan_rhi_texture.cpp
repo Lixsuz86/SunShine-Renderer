@@ -10,9 +10,21 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
 {
     VkDevice device = m_context.GetDevice();
 
+    bool isDepth = (desc.format == RHI::TextureFormat::D32_FLOAT || desc.format == RHI::TextureFormat::D24_UNORM_S8_UINT);
     VkFormat vkFormat = VK_FORMAT_R8G8B8A8_UNORM;
+    VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+
     if (desc.format == RHI::TextureFormat::RGBA8_SRGB) {
         vkFormat = VK_FORMAT_R8G8B8A8_SRGB;
+    } else if (desc.format == RHI::TextureFormat::D32_FLOAT) {
+        vkFormat = VK_FORMAT_D32_SFLOAT;
+        usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    } else if (desc.format == RHI::TextureFormat::D24_UNORM_S8_UINT) {
+        vkFormat = VK_FORMAT_D24_UNORM_S8_UINT;
+        usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     }
 
     VkImageCreateInfo imageInfo{};
@@ -26,7 +38,7 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
     imageInfo.format = vkFormat;
     imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageInfo.usage = usage;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 
@@ -48,7 +60,7 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
     viewInfo.image = m_image;
     viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
     viewInfo.format = vkFormat;
-    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.aspectMask = aspectMask;
     viewInfo.subresourceRange.baseMipLevel = 0;
     viewInfo.subresourceRange.levelCount = 1;
     viewInfo.subresourceRange.baseArrayLayer = 0;
@@ -56,7 +68,7 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
 
     VK_CHECK(vkCreateImageView(device, &viewInfo, nullptr, &m_imageView));
 
-    if (initialData) {
+    if (initialData && !isDepth) {
         VkDeviceSize imageSize = desc.width * desc.height * 4;
 
         // Create CPU staging buffer
