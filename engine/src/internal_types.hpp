@@ -7,6 +7,7 @@
 #include "backend/vulkan/rhi/vulkan_rhi_command_list.hpp"
 #include "sunshine/buffer.hpp"
 #include "sunshine/pipeline.hpp"
+#include "sunshine/render_target.hpp"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -33,6 +34,8 @@ struct CommandContextImpl {
     void Clear(const Color& color);
     void BeginShadowPass(struct ShadowMapImpl& shadowMap);
     void EndShadowPass();
+    void BeginPass(struct RenderTargetImpl& target, const Color& clearColor);
+    void EndPass();
     void EnsurePassActive();
     void SetPipeline(const Pipeline& pipeline);
     void SetVertexBuffer(uint32_t binding, const VertexBuffer& vertexBuffer, uint64_t offset);
@@ -60,6 +63,23 @@ struct ShadowMapImpl {
 
     ShadowMapImpl(Vulkan::VulkanContext& ctx, Vulkan::VulkanRHIDevice& rhiDev, uint32_t w, uint32_t h);
     ~ShadowMapImpl();
+
+    void CreateRenderPass();
+    void CreateFramebuffer();
+};
+
+struct RenderTargetImpl {
+    Vulkan::VulkanContext& context;
+    Vulkan::VulkanRHIDevice& rhiDevice;
+    RenderTargetDesc desc;
+    VkRenderPass renderPass{VK_NULL_HANDLE};
+    VkFramebuffer framebuffer{VK_NULL_HANDLE};
+    std::shared_ptr<RHI::IRHITexture> colorTexture;
+    std::shared_ptr<RHI::IRHITexture> depthTexture;
+    std::shared_ptr<RHI::IRHISampler> rhiSampler;
+
+    RenderTargetImpl(Vulkan::VulkanContext& ctx, Vulkan::VulkanRHIDevice& rhiDev, const RenderTargetDesc& d);
+    ~RenderTargetImpl();
 
     void CreateRenderPass();
     void CreateFramebuffer();

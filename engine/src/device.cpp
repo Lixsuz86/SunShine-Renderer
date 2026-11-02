@@ -1,5 +1,6 @@
 #include "sunshine/device.hpp"
 #include "sunshine/shadow_map.hpp"
+#include "sunshine/render_target.hpp"
 #include "sunshine/error.hpp"
 #include "internal_types.hpp"
 
@@ -188,6 +189,15 @@ Pipeline Device::CreatePipeline(const RHI::PipelineDesc& desc, const ShadowMap& 
         throw GraphicsException("Cannot create shadow pipeline with invalid ShadowMap!");
     }
     auto rhiPipe = m_impl->rhiDevice->CreatePipeline(desc, smImpl->renderPass);
+    return Pipeline(rhiPipe);
+}
+
+Pipeline Device::CreatePipeline(const RHI::PipelineDesc& desc, const RenderTarget& renderTarget) {
+    auto* rtImpl = renderTarget.GetImpl();
+    if (!rtImpl) {
+        throw GraphicsException("Cannot create pipeline with invalid RenderTarget!");
+    }
+    auto rhiPipe = m_impl->rhiDevice->CreatePipeline(desc, rtImpl->renderPass);
     return Pipeline(rhiPipe);
 }
 

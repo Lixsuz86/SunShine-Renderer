@@ -158,6 +158,7 @@ struct DepthStencilDesc {
 enum class TextureFormat {
     RGBA8_UNORM,
     RGBA8_SRGB,
+    RGBA16_FLOAT,
     D32_FLOAT,
     D24_UNORM_S8_UINT
 };
@@ -166,6 +167,7 @@ struct TextureDesc {
     uint32_t width{1};
     uint32_t height{1};
     TextureFormat format{TextureFormat::RGBA8_UNORM};
+    bool isRenderTarget{false};
     std::string debugName;
 };
 

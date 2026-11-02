@@ -13,8 +13,8 @@ Sunshine Renderer'ın temel ilkesi değişmez:
 | Faz | Başlık | Hedef Çıktı | Durum |
 |:---:|:---|:---|:---:|
 | **Faz 6** | Sahne Yöneticisi & 3D Model Yükleme (glTF 2.0 / OBJ) | `examples/05_gltf_model` | ✅ Tamamlandı |
-| **Faz 7** | İleri Işıklandırma & Gerçek Zamanlı Gölgeler (Shadow Mapping) | `examples/06_shadows` | ⬜ Başlanmadı |
-| **Faz 8** | Render Graph & İleri Post-Processing (Bloom / SSAO) | `examples/07_render_graph_bloom` | ⬜ Başlanmadı |
+| **Faz 7** | İleri Işıklandırma & Gerçek Zamanlı Gölgeler (Shadow Mapping) | `examples/06_shadows` | ✅ Tamamlandı |
+| **Faz 8** | Render Graph & İleri Post-Processing (Bloom / SSAO) | `examples/07_render_graph_bloom` | ✅ Tamamlandı |
 | **Faz 9** | Compute Shader & Multi-threaded Command Recording | `examples/08_gpu_particles` | ⬜ Başlanmadı |
 | **Faz 10** | Sunshine Editör & Debug GUI (ImGui Entegrasyonu) | `examples/09_editor` | ⬜ Başlanmadı |
 
@@ -57,13 +57,15 @@ Sunshine Renderer'ın temel ilkesi değişmez:
 ### Faz 8 — Render Graph & İleri Post-Processing (Bloom / SSAO)
 **Hedef:** Çoklu render geçişlerini (pass) ve doku bağımlılıklarını otomatik yöneten modern mimari.
 
-- [ ] Basit ve Güçlü `RenderGraph` / `FrameGraph`:
-  - Pass'ler arası görsel bağımlılıkların (dependency) otomatik çözümü.
+- [x] Basit ve Güçlü `RenderGraph` / `FrameGraph`:
+  - Pass'ler arası görsel bağımlılıkların (dependency) otomatik çözümü (Kahn's Topological Sort).
   - Vulkan `VkImageMemoryBarrier` ve layout geçişlerinin (Color Attachment -> Shader Read) el değmeden otomasyonu.
-  - Geçici render target dokularının bellek havuzunda yeniden kullanılması (Transient Memory Aliasing).
-- [ ] Yüksek Kaliteli Bloom (Dual-Kawase Blur veya Downsample/Upsample piramidi).
-- [ ] SSAO (Screen Space Ambient Occlusion): Nesnelerin köşe ve birleşim yerlerinde gerçekçi ortam gölgelenmesi.
-- [ ] Faz Sonunda: Bloom parlamaları ve SSAO ile sinematik görsel kalite.
+  - Geçici render target dokularının bellek havuzunda yeniden kullanılması (Physical RenderTarget Pooling & Reuse).
+- [x] Yüksek Kaliteli Bloom (Dual-Kawase Blur / Downsample & Upsample piramidi).
+- [x] HDR Floating-Point Format (`RGBA16_FLOAT`, `VK_FORMAT_R16G16B16A16_SFLOAT`) & RenderTarget soyutlaması.
+- [x] Prosedürel Fullscreen Quad (`gl_VertexIndex` bazlı 0-buffer pass pipeline).
+- [x] ACES Filmic Tone Mapping & Gamma Düzeltmesi ile Swapchain Kompozitleme.
+- [x] Faz Sonunda: 3D glTF model, yansımalı zemin ve dönen ultra-parlak neon küreler üzerinde sinematik HDR Bloom parlamaları.
 
 **Çıktı:** `examples/07_render_graph_bloom`
 

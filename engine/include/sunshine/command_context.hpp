@@ -10,6 +10,7 @@ namespace Sunshine {
 class Device;
 class FrameContext;
 class ShadowMap;
+class RenderTarget;
 
 namespace Internal {
     struct CommandContextImpl;
@@ -27,6 +28,9 @@ public:
 
     void BeginShadowPass(ShadowMap& shadowMap);
     void EndShadowPass();
+
+    void BeginPass(RenderTarget& target, const Color& clearColor = Color{0.0f, 0.0f, 0.0f, 1.0f});
+    void EndPass();
 
     void SetPipeline(const Pipeline& pipeline);
     void SetVertexBuffer(uint32_t binding, const VertexBuffer& vertexBuffer, uint64_t offset = 0);

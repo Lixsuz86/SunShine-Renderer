@@ -28,6 +28,7 @@ namespace Internal {
 }
 
 class ShadowMap;
+class RenderTarget;
 
 /**
  * @brief Core Sunshine graphics device representing the physical/logical GPU.
@@ -150,6 +151,11 @@ public:
     Pipeline CreatePipeline(const RHI::PipelineDesc& desc, const ShadowMap& shadowMap);
 
     /**
+     * @brief Creates and caches a graphics pipeline compatible with the specified RenderTarget's render pass.
+     */
+    Pipeline CreatePipeline(const RHI::PipelineDesc& desc, const RenderTarget& renderTarget);
+
+    /**
      * @brief Returns the underlying low-level RHI device interface.
      */
     RHI::IRHIDevice& GetRHIDevice() noexcept;
@@ -157,6 +163,7 @@ public:
 private:
     friend class SwapchainContext;
     friend class ShadowMap;
+    friend class RenderTarget;
     Internal::DeviceImpl* GetImpl() const noexcept { return m_impl.get(); }
 
     std::unique_ptr<Internal::DeviceImpl> m_impl;

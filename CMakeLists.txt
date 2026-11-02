@@ -80,6 +80,8 @@ add_library(sunshine_engine STATIC
     engine/src/shader_watcher.cpp
     engine/src/model.cpp
     engine/src/shadow_map.cpp
+    engine/src/render_target.cpp
+    engine/src/render_graph.cpp
     engine/src/internal_types.hpp
 )
 
@@ -237,6 +239,26 @@ target_link_libraries(06_shadows
 
 set_target_properties(06_shadows PROPERTIES
     OUTPUT_NAME "06_shadows"
+    FOLDER "Examples"
+)
+
+# Example 07: RenderGraph & HDR Bloom (Phase 8)
+add_executable(07_render_graph_bloom
+    examples/07_render_graph_bloom/main.cpp
+)
+
+target_include_directories(07_render_graph_bloom
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/07_render_graph_bloom
+)
+
+target_link_libraries(07_render_graph_bloom
+    PRIVATE
+        sunshine_engine
+)
+
+set_target_properties(07_render_graph_bloom PROPERTIES
+    OUTPUT_NAME "07_render_graph_bloom"
     FOLDER "Examples"
 )
 

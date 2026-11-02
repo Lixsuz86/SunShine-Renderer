@@ -1,5 +1,6 @@
 #include "sunshine/command_context.hpp"
 #include "sunshine/shadow_map.hpp"
+#include "sunshine/render_target.hpp"
 #include "internal_types.hpp"
 #include "sunshine/error.hpp"
 #include <array>
@@ -92,6 +93,47 @@ void CommandContextImpl::BeginShadowPass(ShadowMapImpl& shadowMap) {
 }
 
 void CommandContextImpl::EndShadowPass() {
+    if (passActive) {
+        vkCmdEndRenderPass(commandBuffer);
+        passActive = false;
+    }
+}
+
+void CommandContextImpl::BeginPass(RenderTargetImpl& target, const Color& clearColor) {
+    if (!isRecording) {
+        throw GraphicsException("Cannot begin render pass outside of an active command buffer recording!");
+    }
+
+    if (passActive) {
+        vkCmdEndRenderPass(commandBuffer);
+        passActive = false;
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = target.renderPass;
+    renderPassInfo.framebuffer = target.framebuffer;
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = {target.desc.width, target.desc.height};
+
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color.float32[0] = clearColor.r;
+    clearValues[0].color.float32[1] = clearColor.g;
+    clearValues[0].color.float32[2] = clearColor.b;
+    clearValues[0].color.float32[3] = clearColor.a;
+    clearValues[1].depthStencil = { 1.0f, 0 };
+
+    renderPassInfo.clearValueCount = target.desc.hasDepth ? 2 : 1;
+    renderPassInfo.pClearValues = clearValues.data();
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    passActive = true;
+
+    rhiCommandList.SetViewport(0.0f, 0.0f, static_cast<float>(target.desc.width), static_cast<float>(target.desc.height));
+    rhiCommandList.SetScissor(0, 0, target.desc.width, target.desc.height);
+}
+
+void CommandContextImpl::EndPass() {
     if (passActive) {
         vkCmdEndRenderPass(commandBuffer);
         passActive = false;
@@ -247,6 +289,18 @@ void CommandContext::BeginShadowPass(ShadowMap& shadowMap) {
 void CommandContext::EndShadowPass() {
     if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
     m_impl->EndShadowPass();
+}
+
+void CommandContext::BeginPass(RenderTarget& target, const Color& clearColor) {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    auto* rtImpl = target.GetImpl();
+    if (!rtImpl) throw GraphicsException("Invalid RenderTarget passed to BeginPass!");
+    m_impl->BeginPass(*rtImpl, clearColor);
+}
+
+void CommandContext::EndPass() {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    m_impl->EndPass();
 }
 
 void CommandContext::SetPipeline(const Pipeline& pipeline) {

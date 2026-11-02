@@ -21,6 +21,8 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
 | **Faz 4** | Kullanılabilirlik & Canlı Shader Hot-Reloading | ✅ Tamamlandı | `build/Debug/03_hot_reload.exe` | 2026-10-14 |
 | **Faz 5** | Performans Doğrulama, PBR & Instancing | ✅ Tamamlandı | `build/Debug/04_benchmark.exe` | 2026-10-18 |
 | **Faz 6** | Sahne Yöneticisi & 3D glTF 2.0 Model Yükleme | ✅ Tamamlandı | `build/Debug/05_gltf_model.exe` | 2026-10-18 |
+| **Faz 7** | İleri Işıklandırma & Gerçek Zamanlı Gölgeler (Shadow Mapping) | ✅ Tamamlandı | `build/Release/06_shadows.exe` | 2026-11-02 |
+| **Faz 8** | Render Graph & İleri Post-Processing (HDR Bloom) | ✅ Tamamlandı | `build/Release/07_render_graph_bloom.exe` | 2026-11-02 |
 
 ---
 
@@ -81,6 +83,29 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
 - **Yumuşak Gölgeler (PCF 3x3 Filtering):** `pbr_shadow.frag` shader'ında 9 noktalı Percentage Closer Filtering ve eğime duyarlı (slope-scaled) derinlik toleransı ile sinematik yumuşak gölge kenarları (penumbra) elde edildi.
 - **Border Clamping:** Işık hacmi dışındaki koordinatların kararmaması için `VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE` kenarlık rengine sahip gölge sampler'ı eklendi.
 - **Çıktı:** `build/Release/06_shadows.exe` (Dönen güneş ışığı altında zemine ve glTF kask modeline dinamik yumuşak gölgeler düşüren orbit kameralı etkileşimli sahne).
+
+### 🔹 Faz 8: Render Graph & İleri Post-Processing (HDR Bloom)
+- **HDR Format Desteği (`RGBA16_FLOAT`):** `TextureFormat::RGBA16_FLOAT` ve `VK_FORMAT_R16G16B16A16_SFLOAT` desteği eklendi. Renk değerlerinin $[0.0, 1.0]$ sınırına takılmadan yüksek dinamik aralıklı (HDR, örneğin $10.0+$ parlaklık değerleri) depolanması sağlandı.
+- **Offscreen Render Target Mimarisi (`Sunshine::RenderTarget`):** 16-bit float renk eki ve 32-bit float derinlik ekine sahip, özel render pass ve framebuffer yöneten, sahne geçişi sonrasında diğer pass'lerde doğrudan `Texture` gibi örneklenebilen (`GetColorTexture()`, `GetColorImageView()`) bağımsız render hedefi sınıfı geliştirildi.
+- **DAG Tabanlı `Sunshine::RenderGraph`:**
+  - **Bağımlılık Analizi & Sıralama:** Kahn's Algoritması ile yönlendirilmiş çevrimsiz çizge (DAG) üzerinde geçişlerin (`RenderPassBuilder::Read` ve `Write`) girdi/çıktı ilişkilerine göre otomatik topolojik sıralanması sağlandı.
+  - **Otomatik Düzen (Layout) Geçişleri:** Vulkan render pass subpass bağımlılıkları (`EXTERNAL -> 0` ve `0 -> EXTERNAL`) ile render target'lar çizim bittiğinde otomatik `SHADER_READ_ONLY_OPTIMAL` düzenine geçirildi; manuel bellek bariyeri veya wait semaforu gereksinimi ortadan kaldırıldı.
+  - **Fiziksel RenderTarget Havuzlama (Pooling & Reuse):** Geçişler compile edildiğinde aynı format ve boyuttaki geçici dokular çakışmayan yaşam döngülerine göre havuzdan eşleştirilerek GPU bellek tüketimi minimuma indirildi.
+- **Çok Geçişli (Multi-Pass) Dual-Kawase / Pyramid Bloom Pipeline:**
+  1. `SceneHDR`: 3D glTF PBR kask modeli, yansımalı damalı zemin ve 4 adet yörüngede dönen ultra-parlak neon küre tam HDR 16-bit float arabelleğine render edilir.
+  2. `BrightFilter`: Luma eşik filtresi ($L > 1.0$) ile sahnenin yalnızca yüksek enerjili parlayan bölgeleri 1/2 çözünürlükteki hedef dokuya süzülür.
+  3. `BloomDown1` & `BloomDown2`: 1/4 ve 1/8 çözünürlükte aşamalı Dual-Kawase / tent downsample piramidi ile ışık geniş alana homojen dağıtılır.
+  4. `BloomUp1` & `BloomUp2`: Aşamalı upsampling ve additive blend ile piramit katmanları birleştirilerek yumuşak, sinematik parlama elde edilir.
+  5. `Composite`: Orijinal HDR sahne ile Bloom piramidi ağırlıklandırılarak birleştirilir, ACES Filmic tonemapping ve sRGB Gamma 2.2 düzeltmesi uygulanarak doğrudan Swapchain penceresine aktarılır.
+- **Prosedürel Fullscreen Quad:** Vertex veya index arabelleğine ihtiyaç duymayan, `gl_VertexIndex` ile GPU üzerinde dinamik 3 köşeli devasa üçgen üreten sıfır-overhead post-process vertex shader mimarisi (`cmd.Draw(3)`).
+- **Etkileşimli Kontroller & Canlı Telemetri:**
+  - Sol Fare Sürükle: Orbit kamera dönüşü, Tekerlek: Zoom.
+  - `B` Tuşu: Bloom efektini anında açıp kapatma (A/B karşılaştırması).
+  - `+` / `-` Tuşları: Bloom yoğunluğunu canlı artırma / azaltma.
+  - `Space`: Işık yörüngelerini duraklatma / devam ettirme.
+  - `R`: Kamerayı başlangıç konumuna sıfırlama.
+  - Pencere başlığında anlık FPS, ms ve Bloom durumu telemetrisi.
+- **Çıktı:** `build/Release/07_render_graph_bloom.exe`
 
 ---
 

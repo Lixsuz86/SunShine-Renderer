@@ -1,5 +1,25 @@
 include(FetchContent)
 
+# If dependencies are already downloaded in build/_deps, reuse them directly without running git subbuilds
+if(EXISTS "${CMAKE_BINARY_DIR}/_deps/glfw-src")
+    set(FETCHCONTENT_SOURCE_DIR_GLFW "${CMAKE_BINARY_DIR}/_deps/glfw-src")
+endif()
+if(EXISTS "${CMAKE_BINARY_DIR}/_deps/vulkan_headers-src")
+    set(FETCHCONTENT_SOURCE_DIR_VULKAN_HEADERS "${CMAKE_BINARY_DIR}/_deps/vulkan_headers-src")
+endif()
+if(EXISTS "${CMAKE_BINARY_DIR}/_deps/volk-src")
+    set(FETCHCONTENT_SOURCE_DIR_VOLK "${CMAKE_BINARY_DIR}/_deps/volk-src")
+endif()
+if(EXISTS "${CMAKE_BINARY_DIR}/_deps/glm-src")
+    set(FETCHCONTENT_SOURCE_DIR_GLM "${CMAKE_BINARY_DIR}/_deps/glm-src")
+endif()
+if(EXISTS "${CMAKE_BINARY_DIR}/_deps/stb-src")
+    set(FETCHCONTENT_SOURCE_DIR_STB "${CMAKE_BINARY_DIR}/_deps/stb-src")
+endif()
+if(EXISTS "${CMAKE_BINARY_DIR}/_deps/tinygltf-src")
+    set(FETCHCONTENT_SOURCE_DIR_TINYGLTF "${CMAKE_BINARY_DIR}/_deps/tinygltf-src")
+endif()
+
 # 1. GLFW
 message(STATUS "Fetching GLFW...")
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)

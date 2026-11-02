@@ -17,6 +17,9 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
 
     if (desc.format == RHI::TextureFormat::RGBA8_SRGB) {
         vkFormat = VK_FORMAT_R8G8B8A8_SRGB;
+    } else if (desc.format == RHI::TextureFormat::RGBA16_FLOAT) {
+        vkFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+        usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     } else if (desc.format == RHI::TextureFormat::D32_FLOAT) {
         vkFormat = VK_FORMAT_D32_SFLOAT;
         usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -25,6 +28,10 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
         vkFormat = VK_FORMAT_D24_UNORM_S8_UINT;
         usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    }
+
+    if (desc.isRenderTarget && !isDepth) {
+        usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     }
 
     VkImageCreateInfo imageInfo{};
