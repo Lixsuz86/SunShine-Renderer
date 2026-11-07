@@ -3,7 +3,11 @@
 #include "types.hpp"
 #include "buffer.hpp"
 #include "pipeline.hpp"
+#include "compute_pipeline.hpp"
+#include "secondary_command_context.hpp"
 #include "texture.hpp"
+#include <functional>
+#include <span>
 
 namespace Sunshine {
 
@@ -11,6 +15,7 @@ class Device;
 class FrameContext;
 class ShadowMap;
 class RenderTarget;
+class WorkerThreadPool;
 
 namespace Internal {
     struct CommandContextImpl;
@@ -30,8 +35,20 @@ public:
     void EndShadowPass();
 
     void BeginPass(RenderTarget& target, const Color& clearColor = Color{0.0f, 0.0f, 0.0f, 1.0f});
+    void BeginSecondaryPass(const Color& clearColor = Color{0.0f, 0.0f, 0.0f, 1.0f});
     void EndPass();
 
+    // Compute Commands
+    void SetComputePipeline(const ComputePipeline& pipeline);
+    void SetStorageBufferRaw(uint32_t binding, std::shared_ptr<RHI::IRHIBuffer> buffer, size_t size, size_t offset = 0);
+    template<typename T>
+    void SetStorageBuffer(uint32_t binding, const StorageBuffer<T>& sbo) {
+        SetStorageBufferRaw(binding, sbo.GetRHIBuffer(), sbo.GetSize(), 0);
+    }
+    void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
+    void ComputeToGraphicsBarrier();
+
+    // Graphics Pipeline & Drawing
     void SetPipeline(const Pipeline& pipeline);
     void SetVertexBuffer(uint32_t binding, const VertexBuffer& vertexBuffer, uint64_t offset = 0);
     void SetVertexBuffer(const VertexBuffer& vertexBuffer) { SetVertexBuffer(0, vertexBuffer, 0); }
@@ -55,6 +72,10 @@ public:
     // Convenience draw helpers
     void Draw(const Pipeline& pipeline, const VertexBuffer& vertexBuffer, uint32_t vertexCount);
     void DrawIndexed(const Pipeline& pipeline, const VertexBuffer& vertexBuffer, const IndexBuffer& indexBuffer, uint32_t indexCount);
+
+    // Multi-threaded Secondary Command Recording
+    void RecordParallel(WorkerThreadPool& pool, size_t batchCount, std::function<void(size_t batchIndex, size_t threadId, SecondaryCommandContext& secCmd)> recordFunc);
+    void ExecuteSecondaryCommands(std::span<const SecondaryCommandContext> secondaryContexts);
 
 private:
     friend class Device;

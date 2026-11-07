@@ -95,4 +95,45 @@ private:
     std::shared_ptr<RHI::IRHIBuffer> m_buffer;
 };
 
+template <typename T = void>
+class StorageBuffer {
+public:
+    StorageBuffer() = default;
+    explicit StorageBuffer(std::shared_ptr<RHI::IRHIBuffer> rhiBuffer, size_t size = 0)
+        : m_buffer(std::move(rhiBuffer)), m_size(size ? size : (m_buffer ? m_buffer->GetSize() : 0)) {}
+
+    void Update(const void* data, size_t size, size_t offset = 0) {
+        if (m_buffer) {
+            m_buffer->UpdateData(data, size, offset);
+        }
+    }
+
+    template<typename U>
+    void Update(const std::vector<U>& data, size_t offset = 0) {
+        Update(data.data(), data.size() * sizeof(U), offset);
+    }
+
+    template<typename U>
+    void Update(std::span<const U> data, size_t offset = 0) {
+        Update(data.data(), data.size_bytes(), offset);
+    }
+
+    size_t GetSize() const noexcept {
+        return m_buffer ? m_buffer->GetSize() : m_size;
+    }
+
+    std::shared_ptr<RHI::IRHIBuffer> GetRHIBuffer() const noexcept {
+        return m_buffer;
+    }
+
+    // Helper conversion to VertexBuffer so compute storage buffer can be drawn directly
+    VertexBuffer AsVertexBuffer() const {
+        return VertexBuffer(m_buffer);
+    }
+
+private:
+    std::shared_ptr<RHI::IRHIBuffer> m_buffer;
+    size_t m_size{0};
+};
+
 } // namespace Sunshine

@@ -226,3 +226,4 @@ Sampler RenderTarget::GetSampler() const {
 }
 
 } // namespace Sunshine
+

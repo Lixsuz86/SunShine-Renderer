@@ -25,6 +25,7 @@ public:
     VkDescriptorSet GetDescriptorSet(uint32_t frameIndex) const;
 
     void UpdateUniformBuffer(uint32_t binding, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range, uint32_t frameIndex);
+    void UpdateStorageBuffer(uint32_t binding, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range, uint32_t frameIndex);
     void UpdateTexture(uint32_t binding, VkImageView imageView, VkSampler sampler, uint32_t frameIndex);
 
 private:

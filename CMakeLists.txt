@@ -46,6 +46,8 @@ add_library(sunshine_backend_vulkan STATIC
     backend/vulkan/rhi/vulkan_rhi_shader.cpp
     backend/vulkan/rhi/vulkan_rhi_pipeline.hpp
     backend/vulkan/rhi/vulkan_rhi_pipeline.cpp
+    backend/vulkan/rhi/vulkan_rhi_compute_pipeline.hpp
+    backend/vulkan/rhi/vulkan_rhi_compute_pipeline.cpp
     backend/vulkan/rhi/vulkan_rhi_command_list.hpp
     backend/vulkan/rhi/vulkan_rhi_command_list.cpp
     backend/vulkan/rhi/vulkan_rhi_texture.hpp
@@ -82,6 +84,8 @@ add_library(sunshine_engine STATIC
     engine/src/shadow_map.cpp
     engine/src/render_target.cpp
     engine/src/render_graph.cpp
+    engine/src/thread_pool.cpp
+    engine/src/secondary_command_context.cpp
     engine/src/internal_types.hpp
 )
 
@@ -261,5 +265,26 @@ set_target_properties(07_render_graph_bloom PROPERTIES
     OUTPUT_NAME "07_render_graph_bloom"
     FOLDER "Examples"
 )
+
+# Example 08: GPU Particles & Multi-threaded Command Recording (Phase 9)
+add_executable(08_gpu_particles
+    examples/08_gpu_particles/main.cpp
+)
+
+target_include_directories(08_gpu_particles
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/08_gpu_particles
+)
+
+target_link_libraries(08_gpu_particles
+    PRIVATE
+        sunshine_engine
+)
+
+set_target_properties(08_gpu_particles PROPERTIES
+    OUTPUT_NAME "08_gpu_particles"
+    FOLDER "Examples"
+)
+
 
 

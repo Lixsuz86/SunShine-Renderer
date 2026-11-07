@@ -1,0 +1,112 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+struct Particle {
+    vec4 pos; // xyz = position, w = life (0.0 to 1.0)
+    vec4 vel; // xyz = velocity, w = size
+    vec4 col; // rgba color
+};
+
+layout(std430, binding = 0) buffer ParticleBuffer {
+    Particle particles[];
+};
+
+layout(binding = 1) uniform SimUBO {
+    vec4 attractorA; // xyz = pos, w = strength / mass
+    vec4 attractorB;
+    vec4 attractorC;
+    vec4 attractorD;
+    float deltaTime;
+    float time;
+    int mode;        // 0: Attractor Dance, 1: Vortex Tornado, 2: Galactic Supernova
+    int particleCount;
+} sim;
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= uint(sim.particleCount)) return;
+
+    Particle p = particles[idx];
+
+    if (sim.mode == 0) {
+        // Mode 0: 4 Dynamic Gravitational Attractors
+        vec3 force = vec3(0.0);
+        vec4 attractors[4] = vec4[4](sim.attractorA, sim.attractorB, sim.attractorC, sim.attractorD);
+        for (int i = 0; i < 4; ++i) {
+            vec3 d = attractors[i].xyz - p.pos.xyz;
+            float distSq = dot(d, d) + 0.8; // Softening parameter
+            float dist = sqrt(distSq);
+            vec3 dir = d / dist;
+            force += dir * (attractors[i].w / distSq);
+        }
+
+        // Add tangential swirl around central axis
+        vec3 centralAxis = vec3(0.0, 1.0, 0.0);
+        vec3 swirl = cross(p.pos.xyz, centralAxis) * 0.4;
+
+        p.vel.xyz = p.vel.xyz * 0.988 + (force + swirl) * sim.deltaTime;
+        p.pos.xyz += p.vel.xyz * sim.deltaTime;
+    }
+    else if (sim.mode == 1) {
+        // Mode 1: Cosmic Vortex Tornado
+        vec3 d = p.pos.xyz;
+        float r = length(d.xz) + 0.1;
+        vec3 tangent = normalize(vec3(-d.z, 0.0, d.x));
+        vec3 inward = normalize(vec3(-d.x, 0.0, -d.z));
+        vec3 upward = vec3(0.0, 1.0, 0.0);
+
+        float swirlSpeed = 12.0 / (0.8 + r * 0.35);
+        vec3 targetVel = tangent * swirlSpeed + inward * 2.5 + upward * (1.8 + 0.8 * sin(p.pos.y * 0.4 + sim.time * 2.0));
+
+        // Respawn when reaching top of tornado
+        if (p.pos.y > 14.0) {
+            p.pos.y = -12.0;
+            p.pos.xz *= 0.15;
+            p.vel.xyz = vec3(0.0);
+        }
+
+        p.vel.xyz = mix(p.vel.xyz, targetVel, sim.deltaTime * 3.5);
+        p.pos.xyz += p.vel.xyz * sim.deltaTime;
+    }
+    else {
+        // Mode 2: Pulsing Galactic Supernova
+        vec3 centerDir = -normalize(p.pos.xyz + vec3(0.0001));
+        float distToCenter = length(p.pos.xyz);
+        float pulse = sin(sim.time * 2.5);
+        float gravity = (pulse > 0.0) ? 14.0 : -9.0;
+
+        vec3 acc = centerDir * (gravity / (distToCenter * 0.15 + 0.6));
+        acc += cross(centerDir, vec3(0.0, 1.0, 0.0)) * 7.5;
+
+        // Spherical boundary reflection
+        if (distToCenter > 18.0) {
+            p.vel.xyz = -p.vel.xyz * 0.85;
+            p.pos.xyz = normalize(p.pos.xyz) * 17.8;
+        }
+
+        p.vel.xyz = p.vel.xyz * 0.982 + acc * sim.deltaTime;
+        p.pos.xyz += p.vel.xyz * sim.deltaTime;
+    }
+
+    // Dynamic color gradient based on kinetic velocity
+    float speed = length(p.vel.xyz);
+    float speedNorm = clamp(speed * 0.12, 0.0, 1.0);
+
+    vec3 c1 = vec3(0.12, 0.45, 1.0);  // Electric Sapphire
+    vec3 c2 = vec3(0.85, 0.15, 0.95); // Neon Violet
+    vec3 c3 = vec3(1.0, 0.65, 0.15);  // Solar Amber
+    vec3 c4 = vec3(1.0, 0.98, 0.9);   // Pure Stellar White
+
+    vec3 finalCol;
+    if (speedNorm < 0.33) {
+        finalCol = mix(c1, c2, speedNorm / 0.33);
+    } else if (speedNorm < 0.66) {
+        finalCol = mix(c2, c3, (speedNorm - 0.33) / 0.33);
+    } else {
+        finalCol = mix(c3, c4, (speedNorm - 0.66) / 0.34);
+    }
+
+    p.col = vec4(finalCol, 0.9);
+    particles[idx] = p;
+}

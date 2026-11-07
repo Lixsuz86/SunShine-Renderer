@@ -16,6 +16,7 @@ public:
     virtual void SetVertexBuffer(uint32_t binding, IRHIBuffer& buffer, uint64_t offset = 0) = 0;
     virtual void SetIndexBuffer(IRHIBuffer& buffer, uint64_t offset, IndexType indexType) = 0;
     virtual void SetUniformBuffer(uint32_t binding, IRHIBuffer& buffer, size_t size, size_t offset = 0) = 0;
+    virtual void SetStorageBuffer(uint32_t binding, IRHIBuffer& buffer, size_t size, size_t offset = 0) = 0;
     virtual void SetTexture(uint32_t binding, IRHITexture& texture, IRHISampler& sampler) = 0;
 
     virtual void SetViewport(float x, float y, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f) = 0;

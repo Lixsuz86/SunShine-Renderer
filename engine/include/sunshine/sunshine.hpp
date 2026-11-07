@@ -4,6 +4,7 @@
 #include "error.hpp"
 #include "buffer.hpp"
 #include "pipeline.hpp"
+#include "compute_pipeline.hpp"
 #include "command_context.hpp"
 #include "frame_context.hpp"
 #include "swapchain_context.hpp"
@@ -19,4 +20,5 @@
 #include "shadow_map.hpp"
 #include "render_target.hpp"
 #include "render_graph.hpp"
+#include "thread_pool.hpp"
 #include "rhi/rhi_types.hpp"

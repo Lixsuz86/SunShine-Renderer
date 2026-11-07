@@ -26,3 +26,4 @@ void main() {
 
     outBright = vec4(color * weight, 1.0);
 }
+

@@ -2,6 +2,7 @@
 #include "vulkan_rhi_buffer.hpp"
 #include "vulkan_rhi_shader.hpp"
 #include "vulkan_rhi_pipeline.hpp"
+#include "vulkan_rhi_compute_pipeline.hpp"
 #include "vulkan_rhi_texture.hpp"
 #include "vulkan_rhi_sampler.hpp"
 #include "backend/vulkan/vulkan_context.hpp"
@@ -85,6 +86,10 @@ std::shared_ptr<RHI::IRHIPipeline> VulkanRHIDevice::CreatePipeline(const RHI::Pi
     auto pipeline = std::make_shared<VulkanRHIPipeline>(m_context, rp, desc);
     m_pipelineCache[hash] = pipeline;
     return pipeline;
+}
+
+std::shared_ptr<RHI::IRHIComputePipeline> VulkanRHIDevice::CreateComputePipeline(const RHI::ComputePipelineDesc& desc) {
+    return std::make_shared<VulkanRHIComputePipeline>(m_context, desc);
 }
 
 void VulkanRHIDevice::WaitIdle() {

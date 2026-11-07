@@ -2,6 +2,7 @@
 #include "sunshine/shadow_map.hpp"
 #include "sunshine/render_target.hpp"
 #include "internal_types.hpp"
+#include "backend/vulkan/rhi/vulkan_rhi_buffer.hpp"
 #include "sunshine/error.hpp"
 #include <array>
 
@@ -9,15 +10,19 @@ namespace Sunshine {
 
 namespace Internal {
 
-void CommandContextImpl::Begin(VkCommandBuffer cmd, VkRenderPass rp, VkFramebuffer fb, VkExtent2D ext, uint32_t frameIndex) {
+void CommandContextImpl::Begin(VkCommandBuffer cmd, VkRenderPass rp, VkFramebuffer fb, VkExtent2D ext, uint32_t frameIdx, DeviceImpl* dev) {
     commandBuffer = cmd;
     renderPass = rp;
     framebuffer = fb;
     extent = ext;
+    frameIndex = frameIdx;
+    deviceImpl = dev;
     passActive = false;
+    isSecondaryPass = false;
+    currentComputePipeline = nullptr;
 
     rhiCommandList.SetCommandBuffer(cmd);
-    rhiCommandList.SetFrameIndex(frameIndex);
+    rhiCommandList.SetFrameIndex(frameIdx);
 
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -25,6 +30,38 @@ void CommandContextImpl::Begin(VkCommandBuffer cmd, VkRenderPass rp, VkFramebuff
 
     VK_CHECK(vkBeginCommandBuffer(commandBuffer, &beginInfo));
     isRecording = true;
+}
+
+void CommandContextImpl::BeginSecondaryPass(const Color& clearColor) {
+    if (!isRecording) {
+        throw GraphicsException("Cannot begin secondary pass outside of an active command buffer recording!");
+    }
+
+    if (passActive) {
+        vkCmdEndRenderPass(commandBuffer);
+        passActive = false;
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = renderPass;
+    renderPassInfo.framebuffer = framebuffer;
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = extent;
+
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color.float32[0] = clearColor.r;
+    clearValues[0].color.float32[1] = clearColor.g;
+    clearValues[0].color.float32[2] = clearColor.b;
+    clearValues[0].color.float32[3] = clearColor.a;
+    clearValues[1].depthStencil = { 1.0f, 0 };
+
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+    passActive = true;
+    isSecondaryPass = true;
 }
 
 void CommandContextImpl::Clear(const Color& color) {
@@ -137,6 +174,179 @@ void CommandContextImpl::EndPass() {
     if (passActive) {
         vkCmdEndRenderPass(commandBuffer);
         passActive = false;
+        isSecondaryPass = false;
+    }
+}
+
+void CommandContextImpl::SetComputePipeline(const ComputePipeline& pipeline) {
+    if (!isRecording) {
+        throw GraphicsException("Cannot set compute pipeline outside active recording!");
+    }
+    if (passActive) {
+        vkCmdEndRenderPass(commandBuffer);
+        passActive = false;
+        isSecondaryPass = false;
+    }
+    auto rhiPipe = pipeline.GetRHIComputePipeline();
+    if (!rhiPipe) {
+        throw GraphicsException("Invalid compute pipeline passed to SetComputePipeline!");
+    }
+    auto* vkPipe = dynamic_cast<Vulkan::VulkanRHIComputePipeline*>(rhiPipe.get());
+    if (!vkPipe) {
+        throw GraphicsException("Non-Vulkan compute pipeline passed to SetComputePipeline!");
+    }
+    currentComputePipeline = vkPipe;
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vkPipe->GetPipeline());
+}
+
+void CommandContextImpl::SetStorageBufferRaw(uint32_t binding, std::shared_ptr<RHI::IRHIBuffer> buffer, size_t size, size_t offset) {
+    if (!buffer) return;
+    auto* vkBuf = dynamic_cast<Vulkan::VulkanRHIBuffer*>(buffer.get());
+    if (!vkBuf) return;
+
+    if (currentComputePipeline) {
+        currentComputePipeline->UpdateStorageBuffer(binding, vkBuf->GetBuffer(), offset, size, frameIndex);
+    } else {
+        rhiCommandList.SetStorageBuffer(binding, *buffer, size, offset);
+    }
+}
+
+void CommandContextImpl::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+    if (!isRecording) {
+        throw GraphicsException("Cannot dispatch compute outside active recording!");
+    }
+    if (passActive) {
+        vkCmdEndRenderPass(commandBuffer);
+        passActive = false;
+        isSecondaryPass = false;
+    }
+    if (!currentComputePipeline) {
+        throw GraphicsException("Cannot dispatch without an active compute pipeline!");
+    }
+    if (currentComputePipeline->HasDescriptorSet()) {
+        VkDescriptorSet ds = currentComputePipeline->GetDescriptorSet(frameIndex);
+        if (ds != VK_NULL_HANDLE) {
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, currentComputePipeline->GetPipelineLayout(), 0, 1, &ds, 0, nullptr);
+        }
+    }
+    vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+}
+
+void CommandContextImpl::ComputeBarrier() {
+    if (!isRecording) {
+        throw GraphicsException("Cannot insert barrier outside active recording!");
+    }
+    if (passActive) {
+        vkCmdEndRenderPass(commandBuffer);
+        passActive = false;
+        isSecondaryPass = false;
+    }
+    VkMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+    barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    barrier.dstAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT | VK_ACCESS_SHADER_READ_BIT;
+
+    vkCmdPipelineBarrier(
+        commandBuffer,
+        VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+        VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+        0,
+        1, &barrier,
+        0, nullptr,
+        0, nullptr
+    );
+}
+
+void SecondaryCommandContextImpl::Begin(VkCommandBuffer cmd, VkRenderPass rp, VkFramebuffer fb, uint32_t frameIdx, VkExtent2D ext) {
+    commandBuffer = cmd;
+    frameIndex = frameIdx;
+    rhiCommandList.SetCommandBuffer(cmd);
+    rhiCommandList.SetFrameIndex(frameIdx);
+
+    VkCommandBufferInheritanceInfo inheritanceInfo{};
+    inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+    inheritanceInfo.renderPass = rp;
+    inheritanceInfo.subpass = 0;
+    inheritanceInfo.framebuffer = fb;
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+    beginInfo.pInheritanceInfo = &inheritanceInfo;
+
+    VK_CHECK(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+
+    rhiCommandList.SetViewport(0.0f, 0.0f, static_cast<float>(ext.width), static_cast<float>(ext.height));
+    rhiCommandList.SetScissor(0, 0, ext.width, ext.height);
+}
+
+void SecondaryCommandContextImpl::End() {
+    VK_CHECK(vkEndCommandBuffer(commandBuffer));
+}
+
+void CommandContextImpl::RecordParallel(WorkerThreadPool& pool, size_t batchCount, std::function<void(size_t batchIndex, size_t threadId, SecondaryCommandContext& secCmd)> recordFunc) {
+    if (!passActive || !isSecondaryPass) {
+        BeginSecondaryPass(Color::DarkSlate());
+    }
+    if (batchCount == 0 || !deviceImpl) return;
+
+    VkDevice device = deviceImpl->context->GetDevice();
+
+    struct BatchItem {
+        VkCommandPool pool{VK_NULL_HANDLE};
+        VkCommandBuffer cmd{VK_NULL_HANDLE};
+        std::unique_ptr<SecondaryCommandContextImpl> impl;
+    };
+    std::vector<BatchItem> batches(batchCount);
+
+    size_t threadCount = pool.GetThreadCount();
+    for (size_t i = 0; i < batchCount; ++i) {
+        size_t threadId = (threadCount > 0) ? (i % threadCount) : 0;
+        VkCommandPool cmdPool = deviceImpl->GetThreadCommandPool(static_cast<uint32_t>(threadId), frameIndex);
+        batches[i].pool = cmdPool;
+
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = cmdPool;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+        allocInfo.commandBufferCount = 1;
+
+        VK_CHECK(vkAllocateCommandBuffers(device, &allocInfo, &batches[i].cmd));
+
+        batches[i].impl = std::make_unique<SecondaryCommandContextImpl>();
+        batches[i].impl->Begin(batches[i].cmd, renderPass, framebuffer, frameIndex, extent);
+    }
+
+    pool.ParallelFor(batchCount, [&](size_t batchIndex, size_t threadId) {
+        SecondaryCommandContext secContext(std::move(batches[batchIndex].impl));
+        recordFunc(batchIndex, threadId, secContext);
+        batches[batchIndex].impl = std::move(secContext.m_impl);
+        batches[batchIndex].impl->End();
+    });
+
+    std::vector<VkCommandBuffer> secondaryCmds(batchCount);
+    for (size_t i = 0; i < batchCount; ++i) {
+        secondaryCmds[i] = batches[i].cmd;
+    }
+
+    vkCmdExecuteCommands(commandBuffer, static_cast<uint32_t>(secondaryCmds.size()), secondaryCmds.data());
+
+    for (size_t i = 0; i < batchCount; ++i) {
+        vkFreeCommandBuffers(device, batches[i].pool, 1, &batches[i].cmd);
+    }
+}
+
+void CommandContextImpl::ExecuteSecondaryCommands(std::span<const SecondaryCommandContext> secondaryContexts) {
+    if (secondaryContexts.empty()) return;
+    std::vector<VkCommandBuffer> cmdBuffers;
+    cmdBuffers.reserve(secondaryContexts.size());
+    for (const auto& sec : secondaryContexts) {
+        if (sec.m_impl && sec.m_impl->commandBuffer != VK_NULL_HANDLE) {
+            cmdBuffers.push_back(sec.m_impl->commandBuffer);
+        }
+    }
+    if (!cmdBuffers.empty()) {
+        vkCmdExecuteCommands(commandBuffer, static_cast<uint32_t>(cmdBuffers.size()), cmdBuffers.data());
     }
 }
 
@@ -147,6 +357,7 @@ void CommandContextImpl::EnsurePassActive() {
 }
 
 void CommandContextImpl::SetPipeline(const Pipeline& pipeline) {
+    currentComputePipeline = nullptr;
     EnsurePassActive();
     auto rhiPipe = pipeline.GetRHIPipeline();
     if (!rhiPipe) throw GraphicsException("Invalid Pipeline passed to SetPipeline!");
@@ -168,8 +379,17 @@ void CommandContextImpl::SetIndexBuffer(const IndexBuffer& indexBuffer, uint64_t
 }
 
 void CommandContextImpl::SetUniformBufferRaw(uint32_t binding, std::shared_ptr<RHI::IRHIBuffer> buffer, size_t size, size_t offset) {
-    EnsurePassActive();
     if (!buffer) throw GraphicsException("Invalid buffer passed to SetUniformBufferRaw!");
+
+    if (currentComputePipeline) {
+        auto* vkBuf = dynamic_cast<Vulkan::VulkanRHIBuffer*>(buffer.get());
+        if (vkBuf) {
+            currentComputePipeline->UpdateUniformBuffer(binding, vkBuf->GetBuffer(), offset, size, frameIndex);
+        }
+        return;
+    }
+
+    EnsurePassActive();
     rhiCommandList.SetUniformBuffer(binding, *buffer, size, offset);
 }
 
@@ -298,9 +518,34 @@ void CommandContext::BeginPass(RenderTarget& target, const Color& clearColor) {
     m_impl->BeginPass(*rtImpl, clearColor);
 }
 
+void CommandContext::BeginSecondaryPass(const Color& clearColor) {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    m_impl->BeginSecondaryPass(clearColor);
+}
+
 void CommandContext::EndPass() {
     if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
     m_impl->EndPass();
+}
+
+void CommandContext::SetComputePipeline(const ComputePipeline& pipeline) {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    m_impl->SetComputePipeline(pipeline);
+}
+
+void CommandContext::SetStorageBufferRaw(uint32_t binding, std::shared_ptr<RHI::IRHIBuffer> buffer, size_t size, size_t offset) {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    m_impl->SetStorageBufferRaw(binding, buffer, size, offset);
+}
+
+void CommandContext::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    m_impl->Dispatch(groupCountX, groupCountY, groupCountZ);
+}
+
+void CommandContext::ComputeToGraphicsBarrier() {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    m_impl->ComputeBarrier();
 }
 
 void CommandContext::SetPipeline(const Pipeline& pipeline) {
@@ -356,6 +601,16 @@ void CommandContext::Draw(const Pipeline& pipeline, const VertexBuffer& vertexBu
 void CommandContext::DrawIndexed(const Pipeline& pipeline, const VertexBuffer& vertexBuffer, const IndexBuffer& indexBuffer, uint32_t indexCount) {
     if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
     m_impl->DrawIndexed(pipeline, vertexBuffer, indexBuffer, indexCount);
+}
+
+void CommandContext::RecordParallel(WorkerThreadPool& pool, size_t batchCount, std::function<void(size_t batchIndex, size_t threadId, SecondaryCommandContext& secCmd)> recordFunc) {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    m_impl->RecordParallel(pool, batchCount, std::move(recordFunc));
+}
+
+void CommandContext::ExecuteSecondaryCommands(std::span<const SecondaryCommandContext> secondaryContexts) {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    m_impl->ExecuteSecondaryCommands(secondaryContexts);
 }
 
 } // namespace Sunshine

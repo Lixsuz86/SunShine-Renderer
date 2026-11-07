@@ -15,9 +15,12 @@ VulkanRHIBuffer::VulkanRHIBuffer(VulkanContext& context, const RHI::BufferDesc& 
     bufferInfo.size = desc.size;
 
     VkBufferUsageFlags usageFlags = 0;
-    if (desc.usage & RHI::BufferUsage::Vertex) usageFlags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    if (desc.usage & RHI::BufferUsage::Index)  usageFlags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-    if (desc.usage & RHI::BufferUsage::Uniform) usageFlags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    if (desc.usage & RHI::BufferUsage::Vertex)      usageFlags |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    if (desc.usage & RHI::BufferUsage::Index)       usageFlags |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+    if (desc.usage & RHI::BufferUsage::Uniform)     usageFlags |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    if (desc.usage & RHI::BufferUsage::Storage)     usageFlags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    if (desc.usage & RHI::BufferUsage::TransferSrc) usageFlags |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    if (desc.usage & RHI::BufferUsage::TransferDst) usageFlags |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     bufferInfo.usage = usageFlags;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 

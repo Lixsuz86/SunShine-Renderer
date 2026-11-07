@@ -55,7 +55,33 @@ DeviceImpl::~DeviceImpl() {
             vkDestroyCommandPool(device, commandPool, nullptr);
             commandPool = VK_NULL_HANDLE;
         }
+
+        for (auto& [key, pool] : threadCommandPools) {
+            if (pool != VK_NULL_HANDLE) {
+                vkDestroyCommandPool(device, pool, nullptr);
+            }
+        }
+        threadCommandPools.clear();
     }
+}
+
+VkCommandPool DeviceImpl::GetThreadCommandPool(uint32_t threadId, uint32_t frameIndex) {
+    uint32_t key = (threadId << 1) | (frameIndex & 1);
+    std::lock_guard<std::mutex> lock(poolMutex);
+    auto it = threadCommandPools.find(key);
+    if (it != threadCommandPools.end()) {
+        return it->second;
+    }
+
+    VkCommandPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    poolInfo.queueFamilyIndex = context->GetQueueFamilies().graphicsFamily.value();
+
+    VkCommandPool pool{VK_NULL_HANDLE};
+    VK_CHECK(vkCreateCommandPool(context->GetDevice(), &poolInfo, nullptr, &pool));
+    threadCommandPools[key] = pool;
+    return pool;
 }
 
 void DeviceImpl::CreateSyncObjects() {
@@ -146,6 +172,17 @@ IndexBuffer Device::CreateIndexBuffer(size_t size, const void* initialData, RHI:
     return IndexBuffer(rhiBuf, indexType);
 }
 
+StorageBuffer<> Device::CreateStorageBuffer(size_t sizeBytes, const void* initialData, RHI::BufferUsage extraUsage) {
+    RHI::BufferDesc desc{};
+    desc.size = sizeBytes;
+    desc.usage = RHI::BufferUsage::Storage | extraUsage;
+    desc.memoryType = RHI::BufferMemoryType::CPUVisible;
+    desc.debugName = "StorageBuffer";
+
+    auto rhiBuf = m_impl->rhiDevice->CreateBuffer(desc, initialData);
+    return StorageBuffer<>(rhiBuf, sizeBytes);
+}
+
 Texture Device::CreateTexture2D(uint32_t width, uint32_t height, const void* pixels, RHI::TextureFormat format) {
     RHI::TextureDesc desc{};
     desc.width = width;
@@ -201,6 +238,11 @@ Pipeline Device::CreatePipeline(const RHI::PipelineDesc& desc, const RenderTarge
     return Pipeline(rhiPipe);
 }
 
+ComputePipeline Device::CreateComputePipeline(const RHI::ComputePipelineDesc& desc) {
+    auto rhiPipe = m_impl->rhiDevice->CreateComputePipeline(desc);
+    return ComputePipeline(rhiPipe);
+}
+
 std::optional<FrameContext> Device::BeginFrame(SwapchainContext& swapchain) {
     auto* swapchainImpl = swapchain.GetImpl();
     if (!swapchainImpl || !swapchainImpl->swapchain) {
@@ -247,7 +289,8 @@ std::optional<FrameContext> Device::BeginFrame(SwapchainContext& swapchain) {
         swapchainImpl->renderPass,
         swapchainImpl->framebuffers[imageIndex],
         swapchainImpl->swapchain->GetExtent(),
-        frameIdx
+        frameIdx,
+        m_impl.get()
     );
 
     CommandContext cmdContext(cmdImpl);

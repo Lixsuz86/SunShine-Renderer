@@ -5,6 +5,7 @@
 #include "swapchain_context.hpp"
 #include "buffer.hpp"
 #include "pipeline.hpp"
+#include "compute_pipeline.hpp"
 #include "texture.hpp"
 #include "rhi/rhi_device.hpp"
 
@@ -121,6 +122,22 @@ public:
     }
 
     /**
+     * @brief Creates a typed storage buffer (SSBO) for compute shader read/write.
+     */
+    template<typename T>
+    StorageBuffer<T> CreateStorageBuffer(size_t count, const T* initialData = nullptr, RHI::BufferUsage extraUsage = RHI::BufferUsage::Vertex) {
+        RHI::BufferDesc desc{};
+        desc.size = sizeof(T) * count;
+        desc.usage = RHI::BufferUsage::Storage | extraUsage;
+        desc.memoryType = RHI::BufferMemoryType::CPUVisible;
+        desc.debugName = "StorageBuffer";
+        auto rhiBuf = GetRHIDevice().CreateBuffer(desc, initialData);
+        return StorageBuffer<T>(rhiBuf, desc.size);
+    }
+
+    StorageBuffer<> CreateStorageBuffer(size_t sizeBytes, const void* initialData = nullptr, RHI::BufferUsage extraUsage = RHI::BufferUsage::Vertex);
+
+    /**
      * @brief Creates a 2D GPU texture from raw pixel data.
      */
     Texture CreateTexture2D(uint32_t width, uint32_t height, const void* pixels, RHI::TextureFormat format = RHI::TextureFormat::RGBA8_UNORM);
@@ -154,6 +171,11 @@ public:
      * @brief Creates and caches a graphics pipeline compatible with the specified RenderTarget's render pass.
      */
     Pipeline CreatePipeline(const RHI::PipelineDesc& desc, const RenderTarget& renderTarget);
+
+    /**
+     * @brief Creates a GPU compute pipeline for general-purpose compute dispatch.
+     */
+    ComputePipeline CreateComputePipeline(const RHI::ComputePipelineDesc& desc);
 
     /**
      * @brief Returns the underlying low-level RHI device interface.

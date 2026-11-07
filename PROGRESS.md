@@ -23,6 +23,7 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
 | **Faz 6** | Sahne Yöneticisi & 3D glTF 2.0 Model Yükleme | ✅ Tamamlandı | `build/Debug/05_gltf_model.exe` | 2026-10-18 |
 | **Faz 7** | İleri Işıklandırma & Gerçek Zamanlı Gölgeler (Shadow Mapping) | ✅ Tamamlandı | `build/Release/06_shadows.exe` | 2026-11-02 |
 | **Faz 8** | Render Graph & İleri Post-Processing (HDR Bloom) | ✅ Tamamlandı | `build/Release/07_render_graph_bloom.exe` | 2026-11-02 |
+| **Faz 9** | Compute Shader & Multi-threaded Command Recording | ✅ Tamamlandı | `build/Release/08_gpu_particles.exe` | 2026-11-07 |
 
 ---
 
@@ -106,6 +107,33 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
   - `R`: Kamerayı başlangıç konumuna sıfırlama.
   - Pencere başlığında anlık FPS, ms ve Bloom durumu telemetrisi.
 - **Çıktı:** `build/Release/07_render_graph_bloom.exe`
+
+### 🔹 Faz 9: Compute Shader & Multi-threaded Command Recording
+- **Compute Pipeline Mimarisi:**
+  - RHI katmanına `IRHIComputePipeline` ve `ComputePipelineDesc` arayüzleri eklendi.
+  - Vulkan backend'inde `VulkanRHIComputePipeline` gerçeklendi; render pass ve framebuffer bağımlılığı olmadan doğrudan `vkCreateComputePipelines` ile sıfır-overhead hesaplama hattı kuruldu.
+  - Sunshine frontend katmanına `Sunshine::ComputePipeline`, `device.CreateComputePipeline(...)`, `cmd.SetComputePipeline(...)` ve `cmd.Dispatch(x, y, z)` API'leri entegre edildi.
+- **Storage Buffer (SSBO) Desteği:**
+  - `BufferUsage::Storage` ve `DescriptorType::StorageBuffer` mimariye dahil edildi.
+  - `Sunshine::StorageBuffer<T>` sınıfı geliştirildi. `AsVertexBuffer()` metodu sayesinde Compute Shader tarafından yazılan fizik simülasyonu GPU tamponu, CPU'ya hiçbir veri kopyalanmadan doğrudan Graphics Pipeline'ında `VertexBuffer` olarak bağlandı.
+- **Compute-to-Graphics Senkronizasyon Bariyeri:**
+  - `cmd.ComputeToGraphicsBarrier()` çağrısı ile Vulkan bellek bariyeri (`VkMemoryBarrier`) otomatikleştirildi; `VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT` yazımları güvenle `VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT` okumalarına senkronize edildi.
+- **Çoklu İş Parçacıklı Komut Kaydı (Multi-threaded Command Recording):**
+  - **İş Parçacığı Havuzu (`Sunshine::WorkerThreadPool`):** Donanım çekirdek sayısına (`hardware_concurrency`) göre dinamik iş parçacığı yöneten, `ParallelFor` ve `Enqueue` yetenekli modern C++20 thread pool yazıldı.
+  - **Thread-Safe Komut Havuzları:** Vulkan spesifikasyonunun gerektirdiği gibi her iş parçacığı ve frame slotu için bağımsız `VkCommandPool` tahsisi (`DeviceImpl::GetThreadCommandPool`) sağlandı.
+  - **İkincil Komut Tamponları (`Sunshine::SecondaryCommandContext`):** `VK_COMMAND_BUFFER_LEVEL_SECONDARY` seviyesinde tamponlar tahsis edilerek, render geçişi `VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS` ile başlatıldı.
+  - **Paralel Enjeksiyon (`cmd.RecordParallel`):** Sahnedeki çizim iş yükü $N$ iş parçacığına bölüştürüldü; her çekirdek kendi ikincil tamponunu eşzamanlı doldurdu ve ana iş parçacığı `vkCmdExecuteCommands` ile tek bir Vulkan çağrısında tüm çizimleri GPU'ya iletti.
+- **131.072 GPU Parçacık Simülasyonu (`08_gpu_particles`):**
+  - %100 GPU üzerinde Compute Shader (`particle.comp`) ile 131.072 parçacığın dinamik fiziği simüle edildi.
+  - **3 Simülasyon Modu:**
+    1. *Attractor Dance:* 4 adet dinamik hareketli çekim merkezi ile yerçekimi ve girdap dansı.
+    2. *Cosmic Vortex:* Y ekseni etrafında spiral girdap (tornado) fiziği ve yukarı yönlü emilim.
+    3. *Galactic Supernova:* Nabız gibi atan kozmik patlama, şok dalgaları ve küresel sınır yansımaları.
+  - Parçacık hızına bağlı dinamik renk gradyanı (Mavi -> Macenta -> Altın Sarısı -> Saf Beyaz).
+  - Additive blending (`BlendDesc::blendEnable = true`) ve radyal Gaussian falloff ile parlayan kozmik nebula efekti.
+  - `T` tuşu ile Canlı Kıyaslama: Tek İş Parçacıklı vs Çoklu İş Parçacıklı (Secondary Command Buffers) komut kaydı performansı.
+  - `Space` ile simülasyonu duraklatma, `1`-`2`-`3` ile mod geçişi, `R` ile kamera sıfırlama, orbit/zoom kamera kontrolleri ve canlı FPS/ms telemetrisi.
+- **Çıktı:** `build/Release/08_gpu_particles.exe`
 
 ---
 

@@ -94,3 +94,4 @@ void main() {
     vec3 hdrColor = ambient + directLighting + emissive;
     outHDRColor = vec4(hdrColor, 1.0);
 }
+

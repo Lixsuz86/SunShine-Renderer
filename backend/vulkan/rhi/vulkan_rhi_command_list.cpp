@@ -59,6 +59,17 @@ void VulkanRHICommandList::SetUniformBuffer(uint32_t binding, RHI::IRHIBuffer& b
     m_currentPipeline->UpdateUniformBuffer(binding, vkBuf->GetBuffer(), offset, size, m_frameIndex);
 }
 
+void VulkanRHICommandList::SetStorageBuffer(uint32_t binding, RHI::IRHIBuffer& buffer, size_t size, size_t offset) {
+    if (!m_currentPipeline) {
+        throw GraphicsException("Cannot set storage buffer without an active pipeline bound!");
+    }
+    auto* vkBuf = dynamic_cast<VulkanRHIBuffer*>(&buffer);
+    if (!vkBuf) {
+        throw GraphicsException("Invalid buffer object passed to SetStorageBuffer!");
+    }
+    m_currentPipeline->UpdateStorageBuffer(binding, vkBuf->GetBuffer(), offset, size, m_frameIndex);
+}
+
 void VulkanRHICommandList::SetTexture(uint32_t binding, RHI::IRHITexture& texture, RHI::IRHISampler& sampler) {
     if (!m_currentPipeline) {
         throw GraphicsException("Cannot set texture without an active pipeline bound!");

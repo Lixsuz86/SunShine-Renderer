@@ -39,3 +39,4 @@ void main() {
 
     outColor = vec4(mapped, 1.0);
 }
+

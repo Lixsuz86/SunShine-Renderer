@@ -26,3 +26,4 @@ void main() {
 
     outColor = vec4(sum * (1.0 / 12.0), 1.0);
 }
+

@@ -194,6 +194,14 @@ VulkanRHIPipeline::VulkanRHIPipeline(VulkanContext& context, VkRenderPass compat
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
                                           VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     colorBlendAttachment.blendEnable = desc.blend.blendEnable ? VK_TRUE : VK_FALSE;
+    if (desc.blend.blendEnable) {
+        colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+    }
 
     VkPipelineColorBlendStateCreateInfo colorBlending{};
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -215,18 +223,18 @@ VulkanRHIPipeline::VulkanRHIPipeline(VulkanContext& context, VkRenderPass compat
         for (const auto& b : desc.descriptorBindings) {
             VkDescriptorSetLayoutBinding binding{};
             binding.binding = b.binding;
-            binding.descriptorType = (b.type == RHI::DescriptorType::UniformBuffer)
-                ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-                : VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            if (b.type == RHI::DescriptorType::UniformBuffer) {
+                binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            } else if (b.type == RHI::DescriptorType::StorageBuffer) {
+                binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            } else {
+                binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            }
             binding.descriptorCount = 1;
             binding.stageFlags = 0;
-            if (b.stageFlags == RHI::ShaderStage::Vertex) {
-                binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-            } else if (b.stageFlags == RHI::ShaderStage::Fragment) {
-                binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-            } else {
-                binding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
-            }
+            if (b.stageFlags & RHI::ShaderStage::Vertex)   binding.stageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
+            if (b.stageFlags & RHI::ShaderStage::Fragment) binding.stageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
+            if (b.stageFlags & RHI::ShaderStage::Compute)  binding.stageFlags |= VK_SHADER_STAGE_COMPUTE_BIT;
             binding.pImmutableSamplers = nullptr;
             bindings.push_back(binding);
         }
@@ -238,11 +246,13 @@ VulkanRHIPipeline::VulkanRHIPipeline(VulkanContext& context, VkRenderPass compat
 
         VK_CHECK(vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &m_descriptorSetLayout));
 
-        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        std::array<VkDescriptorPoolSize, 3> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = MAX_SETS * 10;
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[1].descriptorCount = MAX_SETS * 10;
+        poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        poolSizes[2].descriptorCount = MAX_SETS * 10;
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -335,6 +345,27 @@ void VulkanRHIPipeline::UpdateUniformBuffer(uint32_t binding, VkBuffer buffer, V
     descriptorWrite.dstBinding = binding;
     descriptorWrite.dstArrayElement = 0;
     descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pBufferInfo = &bufferInfo;
+
+    vkUpdateDescriptorSets(m_context.GetDevice(), 1, &descriptorWrite, 0, nullptr);
+}
+
+void VulkanRHIPipeline::UpdateStorageBuffer(uint32_t binding, VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range, uint32_t frameIndex) {
+    if (m_descriptorSets.empty()) return;
+    VkDescriptorSet ds = GetDescriptorSet(frameIndex);
+
+    VkDescriptorBufferInfo bufferInfo{};
+    bufferInfo.buffer = buffer;
+    bufferInfo.offset = offset;
+    bufferInfo.range = range;
+
+    VkWriteDescriptorSet descriptorWrite{};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = ds;
+    descriptorWrite.dstBinding = binding;
+    descriptorWrite.dstArrayElement = 0;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     descriptorWrite.descriptorCount = 1;
     descriptorWrite.pBufferInfo = &bufferInfo;
 

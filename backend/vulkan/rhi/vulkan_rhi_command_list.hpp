@@ -18,6 +18,7 @@ public:
     void SetVertexBuffer(uint32_t binding, RHI::IRHIBuffer& buffer, uint64_t offset = 0) override;
     void SetIndexBuffer(RHI::IRHIBuffer& buffer, uint64_t offset, RHI::IndexType indexType) override;
     void SetUniformBuffer(uint32_t binding, RHI::IRHIBuffer& buffer, size_t size, size_t offset = 0) override;
+    void SetStorageBuffer(uint32_t binding, RHI::IRHIBuffer& buffer, size_t size, size_t offset = 0) override;
     void SetTexture(uint32_t binding, RHI::IRHITexture& texture, RHI::IRHISampler& sampler) override;
 
     void SetViewport(float x, float y, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f) override;
