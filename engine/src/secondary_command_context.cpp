@@ -79,3 +79,4 @@ void SecondaryCommandContext::DrawIndexed(uint32_t indexCount, uint32_t instance
 }
 
 } // namespace Sunshine
+

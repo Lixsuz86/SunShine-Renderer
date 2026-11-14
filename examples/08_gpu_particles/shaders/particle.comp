@@ -110,3 +110,4 @@ void main() {
     p.col = vec4(finalCol, 0.9);
     particles[idx] = p;
 }
+

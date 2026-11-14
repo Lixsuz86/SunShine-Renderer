@@ -16,7 +16,7 @@ Sunshine Renderer'ın temel ilkesi değişmez:
 | **Faz 7** | İleri Işıklandırma & Gerçek Zamanlı Gölgeler (Shadow Mapping) | `examples/06_shadows` | ✅ Tamamlandı |
 | **Faz 8** | Render Graph & İleri Post-Processing (Bloom / SSAO) | `examples/07_render_graph_bloom` | ✅ Tamamlandı |
 | **Faz 9** | Compute Shader & Multi-threaded Command Recording | `examples/08_gpu_particles` | ✅ Tamamlandı |
-| **Faz 10** | Sunshine Editör & Debug GUI (ImGui Entegrasyonu) | `examples/09_editor` | ⬜ Başlanmadı |
+| **Faz 10** | Sunshine Editör & Debug GUI (ImGui Entegrasyonu) | `examples/09_editor` | ⏹️ İptal Edildi (v2.0 Kapsamına Ertelendi) |
 
 ---
 
@@ -89,16 +89,18 @@ Sunshine Renderer'ın temel ilkesi değişmez:
 ---
 
 ### Faz 10 — Sunshine Editör Arayüzü & Debug GUI (ImGui Entegrasyonu)
-**Hedef:** Kod derlemeden parametreleri anlık değiştirebilen görsel bir motor editörü.
+> **Not:** Sunshine Renderer v1.0.0 sürüm hedeflerinin (Faz 0 - 9) başarıyla tamamlanması ve motor çekirdeğinin framework'süz yalın yapısını korumak amacıyla Faz 10 iptal edilmiş ve Gelecek v2.0 Yol Haritasına ertelenmiştir.
+> 
+> Motor, Faz 9 ile birlikte **v1.0.0 Resmi Sürümü** olarak yayınlanmıştır.
 
-- [ ] Dear ImGui Vulkan Backend entegrasyonu (Sunshine Command Context ile kesintisiz uyum).
-- [ ] Sahne Ağacı (Scene Hierarchy) ve Obje İnceleme (Inspector) paneli.
-- [ ] Işık ve Materyal Ayarlayıcılar (Renk tekeri, pürüzlülük/metalik kızakları, ışık konumları).
-- [ ] Canlı Kamera ve Post-Processing parametre ayarları.
-- [ ] GPU Bellek ve CPU Frame Time Profiler Zaman Çizelgesi grafiği.
-- [ ] Faz Sonunda: Bağımsız çalıştırılabilen, modern arayüze sahip Sunshine Sahne Editörü.
+- [x] v1.0.0 Kapsamı Donduruldu (Faz 0 - 9 Tamamlandı).
+- [ ] Dear ImGui Vulkan Backend entegrasyonu (v2.0).
+- [ ] Sahne Ağacı (Scene Hierarchy) ve Obje İnceleme (Inspector) paneli (v2.0).
+- [ ] Işık ve Materyal Ayarlayıcılar (v2.0).
+- [ ] Canlı Kamera ve Post-Processing parametre ayarları (v2.0).
+- [ ] GPU Bellek ve CPU Frame Time Profiler grafiği (v2.0).
 
-**Çıktı:** `examples/09_editor`
+**Durum:** ⏹️ İptal Edildi / v2.0 Yol Haritasına Ertelendi
 
 ---
 

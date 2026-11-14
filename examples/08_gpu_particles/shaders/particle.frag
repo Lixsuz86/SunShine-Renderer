@@ -17,3 +17,4 @@ void main() {
     float alpha = exp(-distSq * 9.0);
     outFragColor = vec4(inColor.rgb * alpha * 1.6, inColor.a * alpha);
 }
+

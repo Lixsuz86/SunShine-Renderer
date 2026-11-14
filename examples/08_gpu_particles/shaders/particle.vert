@@ -24,3 +24,4 @@ void main() {
     outColor = inCol;
     outDist = dist;
 }
+
