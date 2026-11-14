@@ -157,11 +157,11 @@ Sunshine Renderer, **"OpenGL Kolaylığı, Vulkan Performansı"** vizyonuyla yol
 ## 🔮 Gelecek Yol Haritası (Sunshine Renderer v2.0)
 Detaylı v2.0 geliştirme adımları ve mimari planlar için **[ROADMAP3.md](file:///c:/Users/ibrah/OneDrive/Desktop/Sunshine%20renderer/ROADMAP3.md)** belgesine başvurunuz.
 
-Gelecek sürümde hedeflenen temel modüller:
-- **Faz 10:** Sunshine Görsel Editör & Dear ImGui Entegrasyonu (`09_editor`)
-- **Faz 11:** Image-Based Lighting (IBL) & HDRI Skybox (`10_ibl_skybox`)
-- **Faz 12:** Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri (`11_cascaded_shadows`)
-- **Faz 13:** GPU-Driven Rendering & Bindless Doku Mimarisi (`12_gpu_driven`)
-- **Faz 14:** Donanım Hızlandırmalı Işın İzleme (Hardware Ray Tracing - `13_ray_tracing`)
+Sunshine Renderer saf bir 3D grafik kütüphanesidir; editör ve GUI işlevleri motoru kullanan istemci uygulamalara bırakılmıştır. v2.0 kapsamında hedeflenen saf render teknolojileri:
+- **Faz 10:** Image-Based Lighting (IBL) & HDRI Skybox (`09_ibl_skybox`)
+- **Faz 11:** Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri (`10_cascaded_shadows`)
+- **Faz 12:** GPU-Driven Rendering & Bindless Doku Mimarisi (`11_gpu_driven`)
+- **Faz 13:** Donanım Hızlandırmalı Işın İzleme (Hardware Ray Tracing - `12_ray_tracing`)
+- **Faz 14:** Ekran Uzayı Yansımaları (Screen-Space Reflections - SSR - `13_ssr`)
 - **Faz 15:** Zamansal Kenar Yumuşatma (Temporal Anti-Aliasing - TAA - `14_taa`)
 

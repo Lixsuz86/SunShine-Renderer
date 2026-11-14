@@ -3,9 +3,12 @@
 
 Bu belge, **v1.0.0 resmi sürümüyle** temel motor mimarisi, RHI katmanı, glTF 2.0 PBR, gölge haritalama, DAG tabanlı Render Graph, HDR Bloom, GPU Compute ve çoklu iş parçacıklı komut kaydı başarıyla tamamlanan Sunshine Renderer'ın **üçüncü nesil (v2.0) mimari hedeflerini** tanımlar.
 
-Sunshine Renderer'ın değişmez manifestosu:  
-> **"OpenGL Kolaylığı, Vulkan Performansı"**  
-> Kullanıcı kod yazarken modern, sezgisel ve temiz bir C++20 API'si görür; arka planda ise modern Vulkan'ın saf donanım gücü, sıfır sürücü ek yükü ve mutlak donanım kontrolü çalışır.
+---
+
+### 🎯 Saf Render Sistemi İlkesi
+> **Sunshine Renderer monolitik bir oyun motoru veya GUI editörü değildir.**  
+> Tıpkı Filament, bgfx veya Diligent Engine gibi; **saf, modüler, taşınabilir ve tavizsiz bir 3D grafik/render sistemidir**.  
+> Editör arayüzleri, sahne tasarım araçları ve GUI katmanları bu motoru temel alan istemci uygulamalara ve geliştiricilere bırakılmıştır. Sunshine Renderer'ın yegane odak noktası: **Vulkan'ın saf donanım gücünü en modern C++20 API ergonomisiyle sunmaktır.**
 
 ---
 
@@ -13,39 +16,18 @@ Sunshine Renderer'ın değişmez manifestosu:
 
 | Faz | Başlık | Hedef Çıktı | Durum |
 |:---:|:---|:---|:---:|
-| **Faz 10** | Sunshine Görsel Editör & Dear ImGui Entegrasyonu | `examples/09_editor` | ⬜ Başlanmadı |
-| **Faz 11** | Image-Based Lighting (IBL) & HDRI Skybox | `examples/10_ibl_skybox` | ⬜ Başlanmadı |
-| **Faz 12** | Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri | `examples/11_cascaded_shadows` | ⬜ Başlanmadı |
-| **Faz 13** | GPU-Driven Rendering & Bindless Doku Mimarisi | `examples/12_gpu_driven` | ⬜ Başlanmadı |
-| **Faz 14** | Donanım Hızlandırmalı Işın İzleme (Hardware Ray Tracing) | `examples/13_ray_tracing` | ⬜ Başlanmadı |
+| **Faz 10** | Image-Based Lighting (IBL) & HDRI Skybox | `examples/09_ibl_skybox` | ⬜ Başlanmadı |
+| **Faz 11** | Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri | `examples/10_cascaded_shadows` | ⬜ Başlanmadı |
+| **Faz 12** | GPU-Driven Rendering & Bindless Doku Mimarisi | `examples/11_gpu_driven` | ⬜ Başlanmadı |
+| **Faz 13** | Donanım Hızlandırmalı Işın İzleme (Hardware Ray Tracing) | `examples/12_ray_tracing` | ⬜ Başlanmadı |
+| **Faz 14** | Ekran Uzayı Yansımaları (Screen-Space Reflections - SSR) | `examples/13_ssr` | ⬜ Başlanmadı |
 | **Faz 15** | Zamansal Kenar Yumuşatma (Temporal Anti-Aliasing - TAA) | `examples/14_taa` | ⬜ Başlanmadı |
 
 ---
 
 ## 📌 Faz Detayları
 
-### Faz 10 — Sunshine Görsel Editör & Dear ImGui Entegrasyonu
-**Hedef:** Kod derleme ihtiyacı olmadan sahne hiyerarşisini, ışıkları, materyalleri ve post-processing parametrelerini anlık düzenleyebilen modern bir motor editörü.
-
-- [ ] **Dear ImGui Vulkan Entegrasyonu:**
-  - Sunshine `CommandContext` ve Frame döngüsü ile kesintisiz uyumlu ImGui backend'i.
-  - Dinamik font atlası yükleme, docking ve multi-viewport desteği.
-- [ ] **Sahne Ağacı (Scene Hierarchy) & Obje İnceleme (Inspector) Paneli:**
-  - Sahnede yer alan 3D modeller, ışıklar ve kameraların düğüm ağacında listelenmesi.
-  - Seçilen nesnenin dönüşüm matrislerinin (Konum, Döndürme, Ölçekleme) canlı düzenlenmesi.
-- [ ] **Materyal & Işık Düzenleyiciler:**
-  - Renk tekeri (Color Picker), Metallic, Roughness, Emissive ve Normal ölçek kızakları.
-  - Güneş açısı, ışık şiddeti ve gölge parametrelerinin anlık ayarlanması.
-- [ ] **Post-Processing & Telemetri Kontrol Paneli:**
-  - Bloom eşiği ve yoğunluğu, ACES tonemapping parametreleri.
-  - CPU/GPU kare süreleri, FPS zaman çizelgesi grafiği ve poligon/draw call sayaçları.
-- [ ] **Faz Sonunda:** Bağımsız çalıştırılabilen, karanlık temalı (Dark Theme) Sunshine Görsel Editörü.
-
-**Çıktı:** `examples/09_editor`
-
----
-
-### Faz 11 — Image-Based Lighting (IBL) & HDRI Skybox
+### Faz 10 — Image-Based Lighting (IBL) & HDRI Skybox
 **Hedef:** Sahneye gerçek dünyanın ışık ve yansıma verilerini entegre ederek fotogerçekçi PBR aydınlatma sağlamak.
 
 - [ ] **360° Equirectangular HDRI Harita Yükleyici:**
@@ -60,11 +42,11 @@ Sunshine Renderer'ın değişmez manifestosu:
   - glTF 2.0 modellerinin hem doğrudan yönlü ışıklardan hem de çevresel HDRI ışığından gerçekçi yansımalar alması.
 - [ ] **Faz Sonunda:** Farklı pürüzlülükte altın, gümüş, plastik ve cam küreler üzerinde nefes kesici HDRI gökyüzü ve yansımaları.
 
-**Çıktı:** `examples/10_ibl_skybox`
+**Çıktı:** `examples/09_ibl_skybox`
 
 ---
 
-### Faz 12 — Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri
+### Faz 11 — Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri
 **Hedef:** Kameraya yakın bölgelerde pikselleşmeyen, ufuk çizgisine kadar uzanan kesintisiz açık dünya gölge sistemi.
 
 - [ ] **Kamera Frustum Bölümleme (Cascade Splitting):**
@@ -78,11 +60,11 @@ Sunshine Renderer'ın değişmez manifestosu:
   - Dilim geçiş noktalarında ani çözünürlük farkını yumuşatan geçiş harmanlaması.
 - [ ] **Faz Sonunda:** Geniş bir arazide hem ayak ucundaki mikro detayların hem de kilometrelerce uzaktaki dağların pürüzsüz gölgeleri.
 
-**Çıktı:** `examples/11_cascaded_shadows`
+**Çıktı:** `examples/10_cascaded_shadows`
 
 ---
 
-### Faz 13 — GPU-Driven Rendering & Bindless Doku Mimarisi
+### Faz 12 — GPU-Driven Rendering & Bindless Doku Mimarisi
 **Hedef:** Çizim çağrısı darboğazını tamamen ortadan kaldırarak milyonlarca poligonu sıfır CPU ek yüküyle GPU üzerinden yönetmek.
 
 - [ ] **Bindless Doku Mimarisi (`VK_EXT_descriptor_indexing`):**
@@ -97,11 +79,11 @@ Sunshine Renderer'ın değişmez manifestosu:
   - Önceki karenin derinlik piramidini kullanarak diğer nesnelerin arkasında kalan geometrilerin erken elenmesi.
 - [ ] **Faz Sonunda:** 50.000+ bağımsız nesnenin tek bir indirect draw çağrısıyla 200+ FPS hızında render edilmesi.
 
-**Çıktı:** `examples/12_gpu_driven`
+**Çıktı:** `examples/11_gpu_driven`
 
 ---
 
-### Faz 14 — Donanım Hızlandırmalı Işın İzleme (Hardware Ray Tracing)
+### Faz 13 — Donanım Hızlandırmalı Işın İzleme (Hardware Ray Tracing)
 **Hedef:** Modern RTX / RDNA GPU'ların adanmış ışın izleme çekirdeklerini kullanarak fotogerçekçi ışık fiziği elde etmek.
 
 - [ ] **Donanım Desteği Tespiti & Dinamik Başlatma:**
@@ -117,7 +99,22 @@ Sunshine Renderer'ın değişmez manifestosu:
   - Yansıtıcı zemin ve metaller üzerinde ekran dışındaki nesneleri de yansıtan kusursuz ayna efektleri.
 - [ ] **Faz Sonunda:** Hibrit rasterizasyon + donanım hızlandırmalı ray tracing ile ayna gibi yansıyan nesneler ve kusursuz gölgeler.
 
-**Çıktı:** `examples/13_ray_tracing`
+**Çıktı:** `examples/12_ray_tracing`
+
+---
+
+### Faz 14 — Ekran Uzayı Yansımaları (Screen-Space Reflections - SSR)
+**Hedef:** Donanımsal Ray Tracing desteklemeyen GPU'larda da dinamik yüzey yansımaları elde etmek.
+
+- [ ] **Hi-Z Derinlik Işın Yürütme (Hierarchical Ray Marching):**
+  - Fragment shader'da yansıma ışınlarının ekran uzayı derinlik tamponu üzerinde hiyerarşik adımlarla yürütülmesi.
+- [ ] **İkili Arama (Binary Search Refinement):**
+  - Işın kesişim noktasının hassaslaştırılması ve yapay kırılmaların engellenmesi.
+- [ ] **Kenar Sönümleme (Edge Fade) & Pürüzlülük Bulanıklaştırma:**
+  - Ekran kenarlarında yansımanın yumuşakça kaybolması ve pürüzlü yüzeylerde yansıma bulanıklığı.
+- [ ] **Faz Sonunda:** Islak zemin, su birikintileri ve cilalı metaller üzerinde dinamik ekran uzayı yansımaları.
+
+**Çıktı:** `examples/13_ssr`
 
 ---
 
