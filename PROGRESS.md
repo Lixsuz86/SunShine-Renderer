@@ -155,9 +155,13 @@ Sunshine Renderer, **"OpenGL Kolaylığı, Vulkan Performansı"** vizyonuyla yol
 ---
 
 ## 🔮 Gelecek Yol Haritası (Sunshine Renderer v2.0)
-Gelecek büyük sürümde (v2.0) hedeflenecek modüller:
-- Dear ImGui Entegrasyonu & Bağımsız Sahne Editörü (Eski Faz 10)
-- Bindless Textures & GPU-Driven Rendering (Indirect Draw & GPU Frustum Culling)
-- Ray Tracing (Vulkan KHR Ray Tracing pipeline ve AS inşası)
-- PBR IBL (Image-Based Lighting) & HDRI Skybox
+Detaylı v2.0 geliştirme adımları ve mimari planlar için **[ROADMAP3.md](file:///c:/Users/ibrah/OneDrive/Desktop/Sunshine%20renderer/ROADMAP3.md)** belgesine başvurunuz.
+
+Gelecek sürümde hedeflenen temel modüller:
+- **Faz 10:** Sunshine Görsel Editör & Dear ImGui Entegrasyonu (`09_editor`)
+- **Faz 11:** Image-Based Lighting (IBL) & HDRI Skybox (`10_ibl_skybox`)
+- **Faz 12:** Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri (`11_cascaded_shadows`)
+- **Faz 13:** GPU-Driven Rendering & Bindless Doku Mimarisi (`12_gpu_driven`)
+- **Faz 14:** Donanım Hızlandırmalı Işın İzleme (Hardware Ray Tracing - `13_ray_tracing`)
+- **Faz 15:** Zamansal Kenar Yumuşatma (Temporal Anti-Aliasing - TAA - `14_taa`)
 

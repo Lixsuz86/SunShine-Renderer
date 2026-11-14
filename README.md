@@ -234,7 +234,7 @@ cmake --build build --config Release
 - [x] **Faz 9 — Compute Shader & Çoklu İş Parçacıklı Komut Kaydı**
 - [x] **v1.0.0 Resmi Sürümü Yayınlandı! 🎉**
 
-*(Not: Eski Faz 10 - Dear ImGui Entegrasyonu & Görsel Editör, v1.0.0 çekirdek stabilitesini dondurmak adına gelecek **v2.0 Yol Haritasına** devredilmiştir.)*
+Gelecek nesil mimari hedefler ve v2.0 geliştirmeleri için **[ROADMAP3.md](ROADMAP3.md)** belgesine başvurunuz.
 
 ---
 
