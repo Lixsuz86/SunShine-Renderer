@@ -3,7 +3,7 @@
 > **"OpenGL Simplicity, Vulkan Performance."**  
 > A high-performance, frameworkless modern C++20 3D graphics engine and Render Hardware Interface (RHI) built on pure Vulkan.
 
-[![Release](https://img.shields.io/badge/Release-v1.0.0-green.svg)](https://github.com/Lixsuz86/SunShine-Renderer/releases/tag/v1.0.0)
+[![Release](https://img.shields.io/badge/Release-v1.1.0-green.svg)](https://github.com/Lixsuz86/SunShine-Renderer/releases/tag/v1.1.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE-APACHE)
 [![Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B20)
@@ -73,6 +73,13 @@ Sunshine's public API is completely insulated from driver internals:
 - **Background File Watcher:** `Sunshine::ShaderWatcher` monitors shader sources on disk and recompiles them via `glslang` in the background.
 - **Zero-Crash Tolerance:** In case of a GLSL compilation or syntax error, the engine continues rendering with the previous working pipeline and prints diagnosis to the console. Once corrected, the pipeline swaps seamlessly on the fly.
 - **Real-Time Telemetry:** `Sunshine::Profiler` measuring CPU frame time, GPU rendering time, FPS, draw call counts, and triangle counts.
+
+### 🌌 8. Image-Based Lighting (IBL) & HDRI Skybox
+- **360° Equirectangular to Cubemap:** Fast multi-threaded projection of high dynamic range (`.hdr`) environment maps to GPU cubemaps (`Sunshine::EnvironmentMap`).
+- **Diffuse Irradiance Cubemap:** Hemispherical cosine-weighted convolution for realistic ambient indirect lighting.
+- **Specular Pre-filtered Environment Map:** Karis GGX importance sampling across roughness mip levels (5 mips).
+- **BRDF 2D Integration LUT:** Split-Sum approximation precalculating Fresnel-Schlick and Smith geometry shadowing.
+- **Dynamic Far-Plane Skybox:** Zero-overhead background sky rendering at $z=w=1.0$ with `LessOrEqual` depth testing.
 
 ---
 
@@ -232,7 +239,8 @@ cmake --build build --config Release
 - [x] **Faz 7 — İleri Işıklandırma & Gerçek Zamanlı Gölgeler (Shadow Mapping)**
 - [x] **Faz 8 — DAG Render Graph & İleri Post-Processing (HDR Bloom)**
 - [x] **Faz 9 — Compute Shader & Çoklu İş Parçacıklı Komut Kaydı**
-- [x] **v1.0.0 Resmi Sürümü Yayınlandı! 🎉**
+- [x] **Faz 10 — Image-Based Lighting (IBL) & HDRI Skybox**
+- [x] **v1.1.0 Resmi Sürümü Yayınlandı! 🎉**
 
 Gelecek nesil mimari hedefler ve v2.0 geliştirmeleri için **[ROADMAP3.md](ROADMAP3.md)** belgesine başvurunuz.
 

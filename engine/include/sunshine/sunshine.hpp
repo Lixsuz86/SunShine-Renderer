@@ -21,4 +21,5 @@
 #include "render_target.hpp"
 #include "render_graph.hpp"
 #include "thread_pool.hpp"
+#include "environment_map.hpp"
 #include "rhi/rhi_types.hpp"

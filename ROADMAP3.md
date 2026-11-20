@@ -16,7 +16,7 @@ Bu belge, **v1.0.0 resmi sürümüyle** temel motor mimarisi, RHI katmanı, glTF
 
 | Faz | Başlık | Hedef Çıktı | Durum |
 |:---:|:---|:---|:---:|
-| **Faz 10** | Image-Based Lighting (IBL) & HDRI Skybox | `examples/09_ibl_skybox` | ⬜ Başlanmadı |
+| **Faz 10** | Image-Based Lighting (IBL) & HDRI Skybox | `examples/09_ibl_skybox` | ✅ Tamamlandı |
 | **Faz 11** | Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri | `examples/10_cascaded_shadows` | ⬜ Başlanmadı |
 | **Faz 12** | GPU-Driven Rendering & Bindless Doku Mimarisi | `examples/11_gpu_driven` | ⬜ Başlanmadı |
 | **Faz 13** | Donanım Hızlandırmalı Işın İzleme (Hardware Ray Tracing) | `examples/12_ray_tracing` | ⬜ Başlanmadı |
@@ -30,17 +30,17 @@ Bu belge, **v1.0.0 resmi sürümüyle** temel motor mimarisi, RHI katmanı, glTF
 ### Faz 10 — Image-Based Lighting (IBL) & HDRI Skybox
 **Hedef:** Sahneye gerçek dünyanın ışık ve yansıma verilerini entegre ederek fotogerçekçi PBR aydınlatma sağlamak.
 
-- [ ] **360° Equirectangular HDRI Harita Yükleyici:**
+- [x] **360° Equirectangular HDRI Harita Yükleyici:**
   - Yüksek dinamik aralıklı `.hdr` formatındaki ortam haritalarının okunması ve GPU küp dokusuna (Cubemap) izdüşürülmesi.
-- [ ] **Diffuse Irradiance Haritası (Hemi-küresel Evrişim):**
+- [x] **Diffuse Irradiance Haritası (Hemi-küresel Evrişim):**
   - Compute Shader veya render geçişi ile kosinüs ağırlıklı küresel evrişim (Cosine-weighted convolution) hesaplanması.
-- [ ] **Specular Pre-filtered Environment Map:**
+- [x] **Specular Pre-filtered Environment Map:**
   - Farklı pürüzlülük (roughness) seviyelerine göre filtrelenmiş yansıma küp haritası (Mipmap piramidi).
-- [ ] **BRDF İkili Entegrasyon LUT (Split-Sum Approximation):**
+- [x] **BRDF İkili Entegrasyon LUT (Split-Sum Approximation):**
   - 2D LUT dokusunda Fresnel-Schlick ve geometri görünürlük integralinin GPU'da önceden hesaplanması.
-- [ ] **PBR Entegrasyonu:**
+- [x] **PBR Entegrasyonu:**
   - glTF 2.0 modellerinin hem doğrudan yönlü ışıklardan hem de çevresel HDRI ışığından gerçekçi yansımalar alması.
-- [ ] **Faz Sonunda:** Farklı pürüzlülükte altın, gümüş, plastik ve cam küreler üzerinde nefes kesici HDRI gökyüzü ve yansımaları.
+- [x] **Faz Sonunda:** Farklı pürüzlülükte altın, gümüş, plastik ve cam küreler üzerinde nefes kesici HDRI gökyüzü ve yansımaları.
 
 **Çıktı:** `examples/09_ibl_skybox`
 

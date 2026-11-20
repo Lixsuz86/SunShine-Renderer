@@ -11,6 +11,8 @@ public:
     virtual uint32_t GetWidth() const noexcept = 0;
     virtual uint32_t GetHeight() const noexcept = 0;
     virtual TextureFormat GetFormat() const noexcept = 0;
+    virtual TextureType GetType() const noexcept = 0;
+    virtual uint32_t GetMipLevels() const noexcept = 0;
 };
 
 } // namespace Sunshine::RHI

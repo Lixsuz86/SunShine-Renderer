@@ -24,7 +24,7 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
 | **Faz 7** | İleri Işıklandırma & Gerçek Zamanlı Gölgeler (Shadow Mapping) | ✅ Tamamlandı | `build/Release/06_shadows.exe` | 2026-11-02 |
 | **Faz 8** | Render Graph & İleri Post-Processing (HDR Bloom) | ✅ Tamamlandı | `build/Release/07_render_graph_bloom.exe` | 2026-11-02 |
 | **Faz 9** | Compute Shader & Multi-threaded Command Recording | ✅ Tamamlandı | `build/Release/08_gpu_particles.exe` | 2026-11-07 |
-| **Faz 10** | Sunshine Editör & Debug GUI (ImGui Entegrasyonu) | ⏹️ İptal / v2.0 Kapsamı | Motor v1.0.0 Resmi Sürümü Yayınlandı | 2026-11-07 |
+| **Faz 10** | Image-Based Lighting (IBL) & HDRI Skybox | ✅ Tamamlandı | `build/Release/09_ibl_skybox.exe` | 2026-11-14 |
 
 ---
 
@@ -135,6 +135,30 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
   - `T` tuşu ile Canlı Kıyaslama: Tek İş Parçacıklı vs Çoklu İş Parçacıklı (Secondary Command Buffers) komut kaydı performansı.
   - `Space` ile simülasyonu duraklatma, `1`-`2`-`3` ile mod geçişi, `R` ile kamera sıfırlama, orbit/zoom kamera kontrolleri ve canlı FPS/ms telemetrisi.
 - **Çıktı:** `build/Release/08_gpu_particles.exe`
+
+### 🔹 Faz 10: Image-Based Lighting (IBL) & HDRI Skybox (v2.0 Başlangıcı)
+- **RHI & Backend Küp Harita (Cubemap) Desteği:**
+  - `TextureType::TextureCube` desteği eklendi (`VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT`, `arrayLayers = 6`, `VK_IMAGE_VIEW_TYPE_CUBE`).
+  - `TextureFormat::RGBA32_FLOAT` ve `RGBA16_FLOAT` yüksek dinamik aralıklı (HDR) doku formatları tam entegre edildi.
+  - `SamplerDesc` içine `minLod` ve `maxLod` eklendi; roughness mipmap piramidinin (`textureLod(prefilteredMap, R, lod)`) donanımsal trilinear sarmalanması sağlandı.
+  - Staging tamponu tüm katmanları (`layerCount = 6`) ve mip seviyelerini tek seferde Vulkan'a kopyalayacak şekilde genişletildi (`CopyBufferToImageRegions`).
+- **360° Equirectangular HDRI & IBL Mimarisi (`Sunshine::EnvironmentMap`):**
+  - `stbi_loadf` ile `.hdr` formatındaki fiziksel ortam haritalarının okunması ve GPU küp dokusuna (512x512) izdüşürülmesi.
+  - Dahili prosedürel atmosferik HDR fiziksel gökyüzü üreteci (Rayleigh saçılması, ufuk gradyanı ve parlak güneş diski).
+  - **Diffuse Irradiance Cubemap (32x32):** Kosinüs ağırlıklı yarı-küresel evrişim (Cosine-weighted hemispherical convolution) ile ortam difüz ışığının hesaplanması.
+  - **Specular Pre-filtered Environment Map (128x128, 5 Mip):** Karis GGX önem örneklemesi (Importance Sampling) ve Hammersley düşük uyumsuzluk dizisiyle pürüzlülük seviyelerine göre filtrelenmiş yansıma küp haritası.
+  - **BRDF 2D Entegrasyon LUT (512x512):** Split-Sum yaklaşımıyla Fresnel-Schlick ve Smith geometri gölgeleme integralinin önceden hesaplanması.
+  - Çoklu CPU iş parçacığıyla paralelleştirilen ultra hızlı ön hesaplama (~200ms).
+- **Fotogerçekçi Cook-Torrance PBR + IBL Entegrasyonu:**
+  - `pbr_ibl.frag` içinde Difüz IBL (`kD * irradiance * albedo`) ve Speküler IBL (`prefilteredColor * (F * brdf.x + brdf.y)`) hesaplaması.
+  - ACES Filmic tonemapping ve sRGB gamma 2.2 düzeltmesi.
+- **Dinamik Skybox:**
+  - Sonsuz projeksiyon ve `CompareOp::LessOrEqual` derinlik testi ile arka plan gökyüzünün far-plane ($z=w=1.0$) seviyesinde çizimi.
+- **İnteraktif Demo (`09_ibl_skybox`):**
+  - 10 farklı PBR küresi (Altın, Gümüş, Bakır, Titanyum, Döküm Demir, Kırmızı Araba Boyası, Zümrüt Seramik, Saten Plastik, Mat Kil, Tebeşir).
+  - `H` tuşu ile Khronos glTF 2.0 `DamagedHelmet.glb` ve küre galerisi arasında anlık geçiş.
+  - `1` tuşu ile IBL açma/kapatma, `2` tuşu ile doğrudan yönlü ışık açma/kapatma, `R` ile kamera sıfırlama, fare ile orbit/zoom kontrolleri.
+- **Çıktı:** `build/Release/09_ibl_skybox.exe`
 
 ---
 

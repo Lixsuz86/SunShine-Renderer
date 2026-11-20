@@ -18,6 +18,8 @@ public:
     uint32_t GetWidth() const noexcept override { return m_desc.width; }
     uint32_t GetHeight() const noexcept override { return m_desc.height; }
     RHI::TextureFormat GetFormat() const noexcept override { return m_desc.format; }
+    RHI::TextureType GetType() const noexcept override { return m_desc.type; }
+    uint32_t GetMipLevels() const noexcept override { return m_desc.mipLevels; }
 
     VkImage GetImage() const noexcept { return m_image; }
     VkImageView GetImageView() const noexcept { return m_imageView; }

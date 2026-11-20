@@ -14,34 +14,49 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
     VkFormat vkFormat = VK_FORMAT_R8G8B8A8_UNORM;
     VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    uint32_t bytesPerPixel = 4;
 
     if (desc.format == RHI::TextureFormat::RGBA8_SRGB) {
         vkFormat = VK_FORMAT_R8G8B8A8_SRGB;
+        bytesPerPixel = 4;
     } else if (desc.format == RHI::TextureFormat::RGBA16_FLOAT) {
         vkFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
         usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        bytesPerPixel = 8;
+    } else if (desc.format == RHI::TextureFormat::RGBA32_FLOAT) {
+        vkFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
+        usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        bytesPerPixel = 16;
     } else if (desc.format == RHI::TextureFormat::D32_FLOAT) {
         vkFormat = VK_FORMAT_D32_SFLOAT;
         usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        bytesPerPixel = 4;
     } else if (desc.format == RHI::TextureFormat::D24_UNORM_S8_UINT) {
         vkFormat = VK_FORMAT_D24_UNORM_S8_UINT;
         usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        bytesPerPixel = 4;
     }
 
     if (desc.isRenderTarget && !isDepth) {
         usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     }
 
+    uint32_t layerCount = (desc.type == RHI::TextureType::TextureCube) ? 6 : 1;
+    uint32_t mipLevels = std::max(1u, desc.mipLevels);
+
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    if (desc.type == RHI::TextureType::TextureCube) {
+        imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+    }
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
     imageInfo.extent.width = desc.width;
     imageInfo.extent.height = desc.height;
     imageInfo.extent.depth = 1;
-    imageInfo.mipLevels = 1;
-    imageInfo.arrayLayers = 1;
+    imageInfo.mipLevels = mipLevels;
+    imageInfo.arrayLayers = layerCount;
     imageInfo.format = vkFormat;
     imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -65,18 +80,43 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewInfo.image = m_image;
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.viewType = (desc.type == RHI::TextureType::TextureCube) ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
     viewInfo.format = vkFormat;
     viewInfo.subresourceRange.aspectMask = aspectMask;
     viewInfo.subresourceRange.baseMipLevel = 0;
-    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.levelCount = mipLevels;
     viewInfo.subresourceRange.baseArrayLayer = 0;
-    viewInfo.subresourceRange.layerCount = 1;
+    viewInfo.subresourceRange.layerCount = layerCount;
 
     VK_CHECK(vkCreateImageView(device, &viewInfo, nullptr, &m_imageView));
 
     if (initialData && !isDepth) {
-        VkDeviceSize imageSize = desc.width * desc.height * 4;
+        std::vector<VkBufferImageCopy> copyRegions;
+        VkDeviceSize currentOffset = 0;
+
+        for (uint32_t mip = 0; mip < mipLevels; ++mip) {
+            uint32_t mipW = std::max(1u, desc.width >> mip);
+            uint32_t mipH = std::max(1u, desc.height >> mip);
+            VkDeviceSize mipFaceSize = static_cast<VkDeviceSize>(mipW) * mipH * bytesPerPixel;
+
+            for (uint32_t layer = 0; layer < layerCount; ++layer) {
+                VkBufferImageCopy region{};
+                region.bufferOffset = currentOffset;
+                region.bufferRowLength = 0;
+                region.bufferImageHeight = 0;
+                region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+                region.imageSubresource.mipLevel = mip;
+                region.imageSubresource.baseArrayLayer = layer;
+                region.imageSubresource.layerCount = 1;
+                region.imageOffset = {0, 0, 0};
+                region.imageExtent = {mipW, mipH, 1};
+
+                copyRegions.push_back(region);
+                currentOffset += mipFaceSize;
+            }
+        }
+
+        VkDeviceSize totalImageSize = currentOffset;
 
         // Create CPU staging buffer
         VkBuffer stagingBuffer;
@@ -84,7 +124,7 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
 
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = imageSize;
+        bufferInfo.size = totalImageSize;
         bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         VK_CHECK(vkCreateBuffer(device, &bufferInfo, nullptr, &stagingBuffer));
@@ -101,14 +141,14 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
         VK_CHECK(vkBindBufferMemory(device, stagingBuffer, stagingBufferMemory, 0));
 
         void* data = nullptr;
-        VK_CHECK(vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data));
-        std::memcpy(data, initialData, static_cast<size_t>(imageSize));
+        VK_CHECK(vkMapMemory(device, stagingBufferMemory, 0, totalImageSize, 0, &data));
+        std::memcpy(data, initialData, static_cast<size_t>(totalImageSize));
         vkUnmapMemory(device, stagingBufferMemory);
 
         // Transition image layout & copy from staging
-        m_context.TransitionImageLayout(m_image, vkFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        m_context.CopyBufferToImage(stagingBuffer, m_image, desc.width, desc.height);
-        m_context.TransitionImageLayout(m_image, vkFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        m_context.TransitionImageLayout(m_image, vkFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels, layerCount);
+        m_context.CopyBufferToImageRegions(stagingBuffer, m_image, copyRegions);
+        m_context.TransitionImageLayout(m_image, vkFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mipLevels, layerCount);
 
         vkDestroyBuffer(device, stagingBuffer, nullptr);
         vkFreeMemory(device, stagingBufferMemory, nullptr);

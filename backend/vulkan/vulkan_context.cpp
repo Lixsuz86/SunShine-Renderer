@@ -352,7 +352,7 @@ void VulkanContext::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceS
     EndSingleTimeCommands(commandBuffer);
 }
 
-void VulkanContext::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const {
+void VulkanContext::TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, uint32_t layerCount) const {
     VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier{};
@@ -373,9 +373,9 @@ void VulkanContext::TransitionImageLayout(VkImage image, VkFormat format, VkImag
     }
 
     barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.levelCount = mipLevels;
     barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
+    barrier.subresourceRange.layerCount = layerCount;
 
     VkPipelineStageFlags sourceStage;
     VkPipelineStageFlags destinationStage;
@@ -420,6 +420,20 @@ void VulkanContext::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t w
 
     vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
+    EndSingleTimeCommands(commandBuffer);
+}
+
+void VulkanContext::CopyBufferToImageRegions(VkBuffer buffer, VkImage image, const std::vector<VkBufferImageCopy>& regions) const {
+    if (regions.empty()) return;
+    VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
+    vkCmdCopyBufferToImage(
+        commandBuffer,
+        buffer,
+        image,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        static_cast<uint32_t>(regions.size()),
+        regions.data()
+    );
     EndSingleTimeCommands(commandBuffer);
 }
 

@@ -16,6 +16,8 @@ public:
     uint32_t GetWidth() const noexcept { return m_texture ? m_texture->GetWidth() : 0; }
     uint32_t GetHeight() const noexcept { return m_texture ? m_texture->GetHeight() : 0; }
     RHI::TextureFormat GetFormat() const noexcept { return m_texture ? m_texture->GetFormat() : RHI::TextureFormat::RGBA8_UNORM; }
+    RHI::TextureType GetType() const noexcept { return m_texture ? m_texture->GetType() : RHI::TextureType::Texture2D; }
+    uint32_t GetMipLevels() const noexcept { return m_texture ? m_texture->GetMipLevels() : 1; }
     std::shared_ptr<RHI::IRHITexture> GetRHITexture() const noexcept { return m_texture; }
     explicit operator bool() const noexcept { return m_texture != nullptr; }
 

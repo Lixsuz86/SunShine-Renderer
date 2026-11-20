@@ -138,9 +138,19 @@ public:
     StorageBuffer<> CreateStorageBuffer(size_t sizeBytes, const void* initialData = nullptr, RHI::BufferUsage extraUsage = RHI::BufferUsage::Vertex);
 
     /**
+     * @brief Creates a GPU texture from description and optional pixel data.
+     */
+    Texture CreateTexture(const RHI::TextureDesc& desc, const void* initialData = nullptr);
+
+    /**
      * @brief Creates a 2D GPU texture from raw pixel data.
      */
     Texture CreateTexture2D(uint32_t width, uint32_t height, const void* pixels, RHI::TextureFormat format = RHI::TextureFormat::RGBA8_UNORM);
+
+    /**
+     * @brief Creates a Cubemap GPU texture with 6 faces and optional mipmap levels.
+     */
+    Texture CreateTextureCube(uint32_t width, uint32_t height, const void* initialData, RHI::TextureFormat format = RHI::TextureFormat::RGBA16_FLOAT, uint32_t mipLevels = 1);
 
     /**
      * @brief Loads an image from disk (PNG, JPG, BMP) and uploads it directly to GPU memory.

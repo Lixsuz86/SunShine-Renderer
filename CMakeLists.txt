@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     SunshineRenderer
-    VERSION 1.0.0
+    VERSION 1.1.0
     LANGUAGES C CXX
 )
 
@@ -86,6 +86,7 @@ add_library(sunshine_engine STATIC
     engine/src/render_graph.cpp
     engine/src/thread_pool.cpp
     engine/src/secondary_command_context.cpp
+    engine/src/environment_map.cpp
     engine/src/internal_types.hpp
 )
 
@@ -283,6 +284,26 @@ target_link_libraries(08_gpu_particles
 
 set_target_properties(08_gpu_particles PROPERTIES
     OUTPUT_NAME "08_gpu_particles"
+    FOLDER "Examples"
+)
+
+# Example 09: Image-Based Lighting & HDRI Skybox (Phase 10)
+add_executable(09_ibl_skybox
+    examples/09_ibl_skybox/main.cpp
+)
+
+target_include_directories(09_ibl_skybox
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/09_ibl_skybox
+)
+
+target_link_libraries(09_ibl_skybox
+    PRIVATE
+        sunshine_engine
+)
+
+set_target_properties(09_ibl_skybox PROPERTIES
+    OUTPUT_NAME "09_ibl_skybox"
     FOLDER "Examples"
 )
 

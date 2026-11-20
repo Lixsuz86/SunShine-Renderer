@@ -51,8 +51,8 @@ VulkanRHISampler::VulkanRHISampler(VulkanContext& context, const RHI::SamplerDes
     samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
     samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     samplerInfo.mipLodBias = 0.0f;
-    samplerInfo.minLod = 0.0f;
-    samplerInfo.maxLod = 0.0f;
+    samplerInfo.minLod = desc.minLod;
+    samplerInfo.maxLod = desc.maxLod;
 
     VK_CHECK(vkCreateSampler(m_context.GetDevice(), &samplerInfo, nullptr, &m_sampler));
 }

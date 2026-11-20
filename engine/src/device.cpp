@@ -183,14 +183,34 @@ StorageBuffer<> Device::CreateStorageBuffer(size_t sizeBytes, const void* initia
     return StorageBuffer<>(rhiBuf, sizeBytes);
 }
 
+Texture Device::CreateTexture(const RHI::TextureDesc& desc, const void* initialData) {
+    auto rhiTex = m_impl->rhiDevice->CreateTexture(desc, initialData);
+    return Texture(rhiTex);
+}
+
 Texture Device::CreateTexture2D(uint32_t width, uint32_t height, const void* pixels, RHI::TextureFormat format) {
     RHI::TextureDesc desc{};
     desc.width = width;
     desc.height = height;
     desc.format = format;
+    desc.type = RHI::TextureType::Texture2D;
+    desc.mipLevels = 1;
     desc.debugName = "Texture2D";
 
     auto rhiTex = m_impl->rhiDevice->CreateTexture(desc, pixels);
+    return Texture(rhiTex);
+}
+
+Texture Device::CreateTextureCube(uint32_t width, uint32_t height, const void* initialData, RHI::TextureFormat format, uint32_t mipLevels) {
+    RHI::TextureDesc desc{};
+    desc.width = width;
+    desc.height = height;
+    desc.format = format;
+    desc.type = RHI::TextureType::TextureCube;
+    desc.mipLevels = mipLevels;
+    desc.debugName = "TextureCube";
+
+    auto rhiTex = m_impl->rhiDevice->CreateTexture(desc, initialData);
     return Texture(rhiTex);
 }
 

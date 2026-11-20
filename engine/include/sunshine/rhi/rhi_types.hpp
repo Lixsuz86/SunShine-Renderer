@@ -157,10 +157,16 @@ struct DepthStencilDesc {
     CompareOp depthCompareOp{CompareOp::Less};
 };
 
+enum class TextureType {
+    Texture2D,
+    TextureCube
+};
+
 enum class TextureFormat {
     RGBA8_UNORM,
     RGBA8_SRGB,
     RGBA16_FLOAT,
+    RGBA32_FLOAT,
     D32_FLOAT,
     D24_UNORM_S8_UINT
 };
@@ -169,6 +175,8 @@ struct TextureDesc {
     uint32_t width{1};
     uint32_t height{1};
     TextureFormat format{TextureFormat::RGBA8_UNORM};
+    TextureType type{TextureType::Texture2D};
+    uint32_t mipLevels{1};
     bool isRenderTarget{false};
     std::string debugName;
 };
@@ -201,6 +209,8 @@ struct SamplerDesc {
     AddressMode addressModeV{AddressMode::Repeat};
     AddressMode addressModeW{AddressMode::Repeat};
     BorderColor borderColor{BorderColor::FloatOpaqueBlack};
+    float minLod{0.0f};
+    float maxLod{0.0f};
 };
 
 enum class DescriptorType {

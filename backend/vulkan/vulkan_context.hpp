@@ -58,7 +58,8 @@ public:
     void EndSingleTimeCommands(VkCommandBuffer commandBuffer) const;
     void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
     void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) const;
-    void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const;
+    void CopyBufferToImageRegions(VkBuffer buffer, VkImage image, const std::vector<VkBufferImageCopy>& regions) const;
+    void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels = 1, uint32_t layerCount = 1) const;
 
     void WaitIdle() const;
 
