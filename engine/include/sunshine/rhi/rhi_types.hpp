@@ -159,6 +159,7 @@ struct DepthStencilDesc {
 
 enum class TextureType {
     Texture2D,
+    Texture2DArray,
     TextureCube
 };
 
@@ -177,6 +178,7 @@ struct TextureDesc {
     TextureFormat format{TextureFormat::RGBA8_UNORM};
     TextureType type{TextureType::Texture2D};
     uint32_t mipLevels{1};
+    uint32_t arrayLayers{1};
     bool isRenderTarget{false};
     std::string debugName;
 };

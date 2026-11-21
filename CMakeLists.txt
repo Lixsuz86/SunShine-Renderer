@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     SunshineRenderer
-    VERSION 1.1.0
+    VERSION 1.2.0
     LANGUAGES C CXX
 )
 
@@ -82,6 +82,7 @@ add_library(sunshine_engine STATIC
     engine/src/shader_watcher.cpp
     engine/src/model.cpp
     engine/src/shadow_map.cpp
+    engine/src/cascaded_shadow_map.cpp
     engine/src/render_target.cpp
     engine/src/render_graph.cpp
     engine/src/thread_pool.cpp
@@ -306,6 +307,27 @@ set_target_properties(09_ibl_skybox PROPERTIES
     OUTPUT_NAME "09_ibl_skybox"
     FOLDER "Examples"
 )
+
+# Example 10: Cascaded Shadow Maps & Open-World Shadows (Phase 11)
+add_executable(10_cascaded_shadows
+    examples/10_cascaded_shadows/main.cpp
+)
+
+target_include_directories(10_cascaded_shadows
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/10_cascaded_shadows
+)
+
+target_link_libraries(10_cascaded_shadows
+    PRIVATE
+        sunshine_engine
+)
+
+set_target_properties(10_cascaded_shadows PROPERTIES
+    OUTPUT_NAME "10_cascaded_shadows"
+    FOLDER "Examples"
+)
+
 
 
 

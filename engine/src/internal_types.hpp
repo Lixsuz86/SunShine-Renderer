@@ -15,6 +15,7 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include <vector>
 #include <memory>
@@ -52,6 +53,7 @@ struct CommandContextImpl {
     void Begin(VkCommandBuffer cmd, VkRenderPass rp, VkFramebuffer fb, VkExtent2D ext, uint32_t frameIndex, struct DeviceImpl* dev = nullptr);
     void Clear(const Color& color);
     void BeginShadowPass(struct ShadowMapImpl& shadowMap);
+    void BeginShadowPass(struct CascadedShadowMapImpl& csm, uint32_t cascadeIndex);
     void EndShadowPass();
     void BeginPass(struct RenderTargetImpl& target, const Color& clearColor);
     void BeginSecondaryPass(const Color& clearColor);
@@ -99,6 +101,28 @@ struct ShadowMapImpl {
 
     void CreateRenderPass();
     void CreateFramebuffer();
+};
+
+struct CascadedShadowMapImpl {
+    Vulkan::VulkanContext& context;
+    Vulkan::VulkanRHIDevice& rhiDevice;
+    uint32_t resolution{2048};
+    uint32_t cascadeCount{4};
+    VkRenderPass renderPass{VK_NULL_HANDLE};
+    std::vector<VkImageView> layerViews;
+    std::vector<VkFramebuffer> framebuffers;
+    std::shared_ptr<RHI::IRHITexture> rhiTexture;
+    std::shared_ptr<RHI::IRHISampler> rhiSampler;
+
+    std::vector<glm::mat4> lightSpaceMatrices;
+    std::vector<float> cascadeSplits;
+
+    CascadedShadowMapImpl(Vulkan::VulkanContext& ctx, Vulkan::VulkanRHIDevice& rhiDev, uint32_t res, uint32_t cascades);
+    ~CascadedShadowMapImpl();
+
+    void CreateRenderPass();
+    void CreateFramebuffers();
+    void UpdateCascades(const class Camera& camera, const glm::vec3& lightDir, float maxShadowDistance, float lambda);
 };
 
 struct RenderTargetImpl {

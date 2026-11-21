@@ -70,6 +70,11 @@ public:
     void SetTarget(const glm::vec3& target) { m_target = target; }
     const glm::vec3& GetTarget() const noexcept { return m_target; }
 
+    float GetFov() const noexcept { return m_fov; }
+    float GetAspectRatio() const noexcept { return m_aspectRatio; }
+    float GetNearPlane() const noexcept { return m_nearPlane; }
+    float GetFarPlane() const noexcept { return m_farPlane; }
+
     /**
      * @brief Calculates and returns the view transformation matrix.
      */

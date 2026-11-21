@@ -43,7 +43,12 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
         usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     }
 
-    uint32_t layerCount = (desc.type == RHI::TextureType::TextureCube) ? 6 : 1;
+    uint32_t layerCount = 1;
+    if (desc.type == RHI::TextureType::TextureCube) {
+        layerCount = 6;
+    } else if (desc.type == RHI::TextureType::Texture2DArray) {
+        layerCount = std::max(1u, desc.arrayLayers);
+    }
     uint32_t mipLevels = std::max(1u, desc.mipLevels);
 
     VkImageCreateInfo imageInfo{};
@@ -80,7 +85,13 @@ VulkanRHITexture::VulkanRHITexture(VulkanContext& context, const RHI::TextureDes
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewInfo.image = m_image;
-    viewInfo.viewType = (desc.type == RHI::TextureType::TextureCube) ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+    if (desc.type == RHI::TextureType::TextureCube) {
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+    } else if (desc.type == RHI::TextureType::Texture2DArray) {
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+    } else {
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    }
     viewInfo.format = vkFormat;
     viewInfo.subresourceRange.aspectMask = aspectMask;
     viewInfo.subresourceRange.baseMipLevel = 0;

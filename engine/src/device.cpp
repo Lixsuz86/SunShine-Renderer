@@ -1,5 +1,6 @@
 #include "sunshine/device.hpp"
 #include "sunshine/shadow_map.hpp"
+#include "sunshine/cascaded_shadow_map.hpp"
 #include "sunshine/render_target.hpp"
 #include "sunshine/error.hpp"
 #include "internal_types.hpp"
@@ -246,6 +247,15 @@ Pipeline Device::CreatePipeline(const RHI::PipelineDesc& desc, const ShadowMap& 
         throw GraphicsException("Cannot create shadow pipeline with invalid ShadowMap!");
     }
     auto rhiPipe = m_impl->rhiDevice->CreatePipeline(desc, smImpl->renderPass);
+    return Pipeline(rhiPipe);
+}
+
+Pipeline Device::CreatePipeline(const RHI::PipelineDesc& desc, const CascadedShadowMap& csm) {
+    auto* csmImpl = csm.GetImpl();
+    if (!csmImpl) {
+        throw GraphicsException("Cannot create shadow pipeline with invalid CascadedShadowMap!");
+    }
+    auto rhiPipe = m_impl->rhiDevice->CreatePipeline(desc, csmImpl->renderPass);
     return Pipeline(rhiPipe);
 }
 

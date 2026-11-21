@@ -14,6 +14,7 @@ namespace Sunshine {
 class Device;
 class FrameContext;
 class ShadowMap;
+class CascadedShadowMap;
 class RenderTarget;
 class WorkerThreadPool;
 
@@ -32,6 +33,7 @@ public:
     void Clear(const Color& color);
 
     void BeginShadowPass(ShadowMap& shadowMap);
+    void BeginShadowPass(CascadedShadowMap& csm, uint32_t cascadeIndex);
     void EndShadowPass();
 
     void BeginPass(RenderTarget& target, const Color& clearColor = Color{0.0f, 0.0f, 0.0f, 1.0f});

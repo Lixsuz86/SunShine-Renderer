@@ -1,5 +1,6 @@
 #include "sunshine/command_context.hpp"
 #include "sunshine/shadow_map.hpp"
+#include "sunshine/cascaded_shadow_map.hpp"
 #include "sunshine/render_target.hpp"
 #include "internal_types.hpp"
 #include "backend/vulkan/rhi/vulkan_rhi_buffer.hpp"
@@ -127,6 +128,39 @@ void CommandContextImpl::BeginShadowPass(ShadowMapImpl& shadowMap) {
 
     rhiCommandList.SetViewport(0.0f, 0.0f, static_cast<float>(shadowMap.width), static_cast<float>(shadowMap.height));
     rhiCommandList.SetScissor(0, 0, shadowMap.width, shadowMap.height);
+}
+
+void CommandContextImpl::BeginShadowPass(CascadedShadowMapImpl& csm, uint32_t cascadeIndex) {
+    if (!isRecording) {
+        throw GraphicsException("Cannot begin shadow pass outside of an active command buffer recording!");
+    }
+    if (cascadeIndex >= csm.framebuffers.size()) {
+        throw GraphicsException("Cascade index out of range in BeginShadowPass!");
+    }
+
+    if (passActive) {
+        vkCmdEndRenderPass(commandBuffer);
+        passActive = false;
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = csm.renderPass;
+    renderPassInfo.framebuffer = csm.framebuffers[cascadeIndex];
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = {csm.resolution, csm.resolution};
+
+    VkClearValue clearValue{};
+    clearValue.depthStencil = { 1.0f, 0 };
+
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearValue;
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    passActive = true;
+
+    rhiCommandList.SetViewport(0.0f, 0.0f, static_cast<float>(csm.resolution), static_cast<float>(csm.resolution));
+    rhiCommandList.SetScissor(0, 0, csm.resolution, csm.resolution);
 }
 
 void CommandContextImpl::EndShadowPass() {
@@ -504,6 +538,13 @@ void CommandContext::BeginShadowPass(ShadowMap& shadowMap) {
     auto* smImpl = shadowMap.GetImpl();
     if (!smImpl) throw GraphicsException("Invalid ShadowMap passed to BeginShadowPass!");
     m_impl->BeginShadowPass(*smImpl);
+}
+
+void CommandContext::BeginShadowPass(CascadedShadowMap& csm, uint32_t cascadeIndex) {
+    if (!m_impl) throw GraphicsException("Invalid or moved CommandContext called!");
+    auto* csmImpl = csm.GetImpl();
+    if (!csmImpl) throw GraphicsException("Invalid CascadedShadowMap passed to BeginShadowPass!");
+    m_impl->BeginShadowPass(*csmImpl, cascadeIndex);
 }
 
 void CommandContext::EndShadowPass() {

@@ -25,6 +25,7 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
 | **Faz 8** | Render Graph & İleri Post-Processing (HDR Bloom) | ✅ Tamamlandı | `build/Release/07_render_graph_bloom.exe` | 2026-11-02 |
 | **Faz 9** | Compute Shader & Multi-threaded Command Recording | ✅ Tamamlandı | `build/Release/08_gpu_particles.exe` | 2026-11-07 |
 | **Faz 10** | Image-Based Lighting (IBL) & HDRI Skybox | ✅ Tamamlandı | `build/Release/09_ibl_skybox.exe` | 2026-11-14 |
+| **Faz 11** | Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri | ✅ Tamamlandı | `build/Release/10_cascaded_shadows.exe` | 2026-11-20 |
 
 ---
 
@@ -159,6 +160,35 @@ Bu belge, Sunshine Renderer motorunun geliştirilme sürecindeki tüm fazları, 
   - `H` tuşu ile Khronos glTF 2.0 `DamagedHelmet.glb` ve küre galerisi arasında anlık geçiş.
   - `1` tuşu ile IBL açma/kapatma, `2` tuşu ile doğrudan yönlü ışık açma/kapatma, `R` ile kamera sıfırlama, fare ile orbit/zoom kontrolleri.
 - **Çıktı:** `build/Release/09_ibl_skybox.exe`
+
+### 🔹 Faz 11: Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri
+- **RHI Doku Dizisi (Texture2DArray) Desteği:**
+  - `TextureType::Texture2DArray` ve `TextureDesc::arrayLayers` alanları RHI katmanına eklendi.
+  - Vulkan backend'inde `VK_IMAGE_VIEW_TYPE_2D_ARRAY` oluşturularak 4 kaskadın derinlik dilimleri tek bir GPU arabelleğinde (`VK_FORMAT_D32_SFLOAT`) toplandı.
+- **`Sunshine::CascadedShadowMap` Mimarisi:**
+  - 4 kaskad derinlik dilimi için adanmış render pass (`VK_ATTACHMENT_LOAD_OP_CLEAR`, `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`).
+  - Her kaskad katmanı için bağımsız 2D `VkImageView` ve `VkFramebuffer` yönetimi; geometry shader veya multiview uzantısına ihtiyaç duymadan %100 taşınabilir saf Vulkan rendering.
+  - `cmd.BeginShadowPass(csm, cascadeIndex)` ve `cmd.EndShadowPass()` ergonomik API'si.
+  - `device.CreatePipeline(pipeDesc, csm)` ile sıfır renk eklentili gölge derinlik pipeline önbellekleme desteği.
+- **Pratik Logaritmik Frustum Slicing:**
+  - $C_i = \lambda \cdot C_{log} + (1 - \lambda) \cdot C_{uni}$ formülü ($\lambda = 0.85$, $near = 0.1\text{m}$, $far = 150.0\text{m}$).
+  - Kamera yakınında (0-6m) milimetrik keskinlik, orta mesafede (6-20m, 20-55m) net gölgeler ve uzak ufukta (55-150m) geniş açık dünya kapsama alanı.
+- **Işık Uzayı Dönüşümü & Sub-Pixel Texel Snapping:**
+  - Kamera frustum köşelerinin dünya uzayına izdüşürülmesi, ışık yönüne göre sınırlayıcı küre (bounding sphere) ve tight-fit ortografik projeksiyon matrisi inşası.
+  - Sınırlayıcı küre merkezinin ışık uzayı piksel boyutunun tam katlarına yuvarlanması (`floor(center / texelSize) * texelSize`).
+  - Kamera döndüğünde veya hareket ettiğinde gölge kenarlarında oluşan titreme ve piksel yüzme (shimmering / crawling) tamamen yok edildi.
+- **GLSL Kaskad Örnekleme & 20% Blend Band:**
+  - `sampler2DArray` üzerinde view-space derinliğe göre otomatik kaskad dilim seçimi.
+  - 3x3 Percentage-Closer Filtering (PCF) ve eğime duyarlı adaptif derinlik toleransı (slope-scale bias).
+  - Kaskad sınırlarında çözünürlük geçiş çizgisini sıfırlayan %20 yumuşak harmanlama bandı (Cascade Blend Band).
+- **Açık Dünya İnteraktif Demosu (`10_cascaded_shadows`):**
+  - 160x160 metre prosedürel zemin arazisi, yakın mesafe sütunlar/küreler, orta mesafe monolitler ve 140 metreye uzanan dev kuleler.
+  - `C` Tuşu: Kaskad dilimlerini renkli hata ayıklama tonlamasıyla gösterme (Kaskad 0: Kırmızı, 1: Yeşil, 2: Mavi, 3: Sarı).
+  - `B` Tuşu: Kaskad harmanlama bandını (Blend Band) açma/kapatma (A/B görsel test).
+  - `Space`: Güneşin gökyüzündeki dairesel hareketini duraklatma / devam ettirme.
+  - Fare ile dinamik kamera sürükleme, zoom kontrolleri ve pencere başlığında anlık FPS, ms, Draw Call ve kaskad durumu telemetrisi.
+- **Çıktı:** `build/Release/10_cascaded_shadows.exe`
+
 
 ---
 

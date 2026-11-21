@@ -22,4 +22,5 @@
 #include "render_graph.hpp"
 #include "thread_pool.hpp"
 #include "environment_map.hpp"
+#include "cascaded_shadow_map.hpp"
 #include "rhi/rhi_types.hpp"

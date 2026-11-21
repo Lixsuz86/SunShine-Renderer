@@ -17,7 +17,7 @@ Bu belge, **v1.0.0 resmi sürümüyle** temel motor mimarisi, RHI katmanı, glTF
 | Faz | Başlık | Hedef Çıktı | Durum |
 |:---:|:---|:---|:---:|
 | **Faz 10** | Image-Based Lighting (IBL) & HDRI Skybox | `examples/09_ibl_skybox` | ✅ Tamamlandı |
-| **Faz 11** | Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri | `examples/10_cascaded_shadows` | ⬜ Başlanmadı |
+| **Faz 11** | Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri | `examples/10_cascaded_shadows` | ✅ Tamamlandı |
 | **Faz 12** | GPU-Driven Rendering & Bindless Doku Mimarisi | `examples/11_gpu_driven` | ⬜ Başlanmadı |
 | **Faz 13** | Donanım Hızlandırmalı Işın İzleme (Hardware Ray Tracing) | `examples/12_ray_tracing` | ⬜ Başlanmadı |
 | **Faz 14** | Ekran Uzayı Yansımaları (Screen-Space Reflections - SSR) | `examples/13_ssr` | ⬜ Başlanmadı |
@@ -49,16 +49,16 @@ Bu belge, **v1.0.0 resmi sürümüyle** temel motor mimarisi, RHI katmanı, glTF
 ### Faz 11 — Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri
 **Hedef:** Kameraya yakın bölgelerde pikselleşmeyen, ufuk çizgisine kadar uzanan kesintisiz açık dünya gölge sistemi.
 
-- [ ] **Kamera Frustum Bölümleme (Cascade Splitting):**
+- [x] **Kamera Frustum Bölümleme (Cascade Splitting):**
   - Görüş piramidinin pratik/logaritmik derinlik dilimlerine (3-4 Cascade) ayrılması.
-- [ ] **Işık Uzayı Dönüşümleri & Texel Snapping:**
+- [x] **Işık Uzayı Dönüşümleri & Texel Snapping:**
   - Her dilim için sıkı (tight-fit) ortografik projeksiyon matrisinin hesaplanması.
   - Kamera hareketinde gölge kenarlarının titremesini (shadow shimmering) önleyen piksel hizalama (sub-pixel snapping).
-- [ ] **2D Texture Array Gölge Tamponu:**
+- [x] **2D Texture Array Gölge Tamponu:**
   - Tek bir `VK_IMAGE_VIEW_TYPE_2D_ARRAY` arabelleğinde tüm dilimlerin depolanması.
-- [ ] **Dilim Harmanlama (Cascade Blend Band):**
+- [x] **Dilim Harmanlama (Cascade Blend Band):**
   - Dilim geçiş noktalarında ani çözünürlük farkını yumuşatan geçiş harmanlaması.
-- [ ] **Faz Sonunda:** Geniş bir arazide hem ayak ucundaki mikro detayların hem de kilometrelerce uzaktaki dağların pürüzsüz gölgeleri.
+- [x] **Faz Sonunda:** Geniş bir arazide hem ayak ucundaki mikro detayların hem de kilometrelerce uzaktaki dağların pürüzsüz gölgeleri.
 
 **Çıktı:** `examples/10_cascaded_shadows`
 

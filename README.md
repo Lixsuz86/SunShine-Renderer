@@ -3,7 +3,7 @@
 > **"OpenGL Simplicity, Vulkan Performance."**  
 > A high-performance, frameworkless modern C++20 3D graphics engine and Render Hardware Interface (RHI) built on pure Vulkan.
 
-[![Release](https://img.shields.io/badge/Release-v1.1.0-green.svg)](https://github.com/Lixsuz86/SunShine-Renderer/releases/tag/v1.1.0)
+[![Release](https://img.shields.io/badge/Release-v1.2.0-green.svg)](https://github.com/Lixsuz86/SunShine-Renderer/releases/tag/v1.2.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE-APACHE)
 [![Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B20)
@@ -81,6 +81,13 @@ Sunshine's public API is completely insulated from driver internals:
 - **BRDF 2D Integration LUT:** Split-Sum approximation precalculating Fresnel-Schlick and Smith geometry shadowing.
 - **Dynamic Far-Plane Skybox:** Zero-overhead background sky rendering at $z=w=1.0$ with `LessOrEqual` depth testing.
 
+### ☀️ 9. Cascaded Shadow Maps (CSM) & Open-World Shadows
+- **4-Cascade Frustum Slicing:** Practical logarithmic + uniform split scheme extending shadows out to 150m horizons.
+- **Sub-Pixel Texel Snapping:** Bounding sphere center clamped to shadow texel multiples, totally eliminating edge jitter and crawling.
+- **2D Texture Array Depth Buffer:** All cascade slices encapsulated into a single `VK_IMAGE_VIEW_TYPE_2D_ARRAY` (`D32_SFLOAT`).
+- **Smooth 20% Blend Band:** Smooth interpolation across cascade boundaries eliminating sharp resolution seams.
+- **Hardware Instancing:** Colonnades, monoliths, and spheres batched into 3 instanced draw calls with zero descriptor thrashing.
+
 ---
 
 ## 💻 Quick Code Example
@@ -128,7 +135,7 @@ int main() {
 
 ## 🎮 Interactive Demos Showcase
 
-Sunshine Renderer ships with 9 progressive, fully interactive examples:
+Sunshine Renderer ships with 11 progressive, fully interactive examples:
 
 | Executable | Highlight / Milestone | Controls |
 |:---|:---|:---|
@@ -141,6 +148,8 @@ Sunshine Renderer ships with 9 progressive, fully interactive examples:
 | **`06_shadows.exe`** | 2048x2048 Directional Shadow Map, 3x3 PCF soft penumbra | Mouse drag = Orbit, `Space` pauses sun |
 | **`07_render_graph_bloom.exe`** | DAG RenderGraph, HDR RGBA16F, Dual-Kawase Bloom pyramid | `B` toggles bloom, `+/-` adjusts intensity |
 | **`08_gpu_particles.exe`** | 131,072 GPU Particles, Compute SSBO, Multi-threaded recording | `1/2/3` modes, `T` toggles multi-threading |
+| **`09_ibl_skybox.exe`** | Image-Based Lighting, HDRI skybox, diffuse/specular irradiance | `H` toggles helmet/spheres, `1` IBL, `2` Sun |
+| **`10_cascaded_shadows.exe`** | 4-Cascade CSM, open-world 150m shadows, texel snapping, blend band | `C` debug colors, `B` blend band, `Space` sun orbit |
 
 ---
 
@@ -178,7 +187,9 @@ Sunshine Renderer/
 │   ├── 05_gltf_model/
 │   ├── 06_shadows/
 │   ├── 07_render_graph_bloom/
-│   └── 08_gpu_particles/
+│   ├── 08_gpu_particles/
+│   ├── 09_ibl_skybox/
+│   └── 10_cascaded_shadows/
 ├── tools/                         # Offline and runtime glslang compilation tools
 ├── PROGRESS.md                    # Comprehensive development log across all phases
 ├── ROADMAP2.md                    # Roadmap 2.0 architectural records
@@ -212,6 +223,12 @@ cmake --build build --config Release
 ### Running Examples
 
 ```powershell
+# Run Cascaded Shadow Maps (CSM) Open-World Demo:
+.\build\Release\10_cascaded_shadows.exe
+
+# Run Image-Based Lighting & HDRI Skybox Demo:
+.\build\Release\09_ibl_skybox.exe
+
 # Run GPU Particles & Multi-threaded Command Recording:
 .\build\Release\08_gpu_particles.exe
 
@@ -240,7 +257,8 @@ cmake --build build --config Release
 - [x] **Faz 8 — DAG Render Graph & İleri Post-Processing (HDR Bloom)**
 - [x] **Faz 9 — Compute Shader & Çoklu İş Parçacıklı Komut Kaydı**
 - [x] **Faz 10 — Image-Based Lighting (IBL) & HDRI Skybox**
-- [x] **v1.1.0 Resmi Sürümü Yayınlandı! 🎉**
+- [x] **Faz 11 — Cascaded Shadow Maps (CSM) & Açık Dünya Gölgeleri**
+- [x] **v1.2.0 Resmi Sürümü Yayınlandı! 🎉**
 
 Gelecek nesil mimari hedefler ve v2.0 geliştirmeleri için **[ROADMAP3.md](ROADMAP3.md)** belgesine başvurunuz.
 

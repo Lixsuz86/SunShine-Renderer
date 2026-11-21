@@ -29,6 +29,7 @@ namespace Internal {
 }
 
 class ShadowMap;
+class CascadedShadowMap;
 class RenderTarget;
 
 /**
@@ -178,6 +179,11 @@ public:
     Pipeline CreatePipeline(const RHI::PipelineDesc& desc, const ShadowMap& shadowMap);
 
     /**
+     * @brief Creates and caches a graphics pipeline compatible with the specified CascadedShadowMap's depth pass.
+     */
+    Pipeline CreatePipeline(const RHI::PipelineDesc& desc, const CascadedShadowMap& csm);
+
+    /**
      * @brief Creates and caches a graphics pipeline compatible with the specified RenderTarget's render pass.
      */
     Pipeline CreatePipeline(const RHI::PipelineDesc& desc, const RenderTarget& renderTarget);
@@ -195,6 +201,7 @@ public:
 private:
     friend class SwapchainContext;
     friend class ShadowMap;
+    friend class CascadedShadowMap;
     friend class RenderTarget;
     Internal::DeviceImpl* GetImpl() const noexcept { return m_impl.get(); }
 
